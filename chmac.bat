@@ -17,19 +17,56 @@ setlocal enabledelayedexpansion
 if defined debug echo :: Debugging mode 1 is ON.
 if defined debug2 echo on&set debug=1&echo :: Debugging mode 2 is ON.
 
+:: set whether to check for ChMac update silently
+set mUpdateChMac=Y
 set mErrCode=0
 set mAutoChangeInterval=None
-set ChMacVersion=1.0
+set ChMacVersion=1.1
 
 :: if elevated itself
 :: if /i "%1" EQU "/2ndtime" set secondRun=1
+
+
+:: ======================================================== language (auto / manual)
+
+:: auto detect current user language. (so far English/Chinese T/Chinese S)
+:: separate between CHS, CHT and EN. For CHT (1), use "¥Ø¿ý"; for CHS (2), use "Ä¿Â¼".
+
+:: check if lang is defined in ECPP
+if /i "%lang%"=="En" goto :skipLangChk
+if /i "%lang%"=="Cht" goto :skipLangChk
+if /i "%lang%"=="Chs" goto :skipLangChk
+set lang=En
+dir %systemdrive% | find /i "¥Ø¿ý" >nul 2>&1
+if %errorlevel% EQU 0 set lang=Cht
+dir %systemdrive% | find /i "Ä¿Â¼" >nul 2>&1
+if %errorlevel% EQU 0 set lang=Chs
+:skipLangChk
+
+:: OS ver check
+
+set OSver=0
+for /f "usebackq tokens=1* delims=Z" %%a in (`reg query "hklm\software\microsoft\windows nt\currentversion" /v CurrentVersion`) do set OSver=%%b
+
+:: delete used per-session MAC track list
+
+del "%temp%\exclMac.tmp" /f /q >nul 2>&1
 
 :: ======================================================== pre parameter check
 
 :: ======================================================== set work directory (see /d) 
 
+:: detect if user ChMac is run by Run As Administrator (ie %CD% would be windir\system32)
+:: correct the working directory to be %~d0%~p0 (i.e. x:\...\Chmac\
+:: so that Run As Administrator would not fail
+:: (cancelled) if /i "%CD%" EQU "%windir%\system32" cd /d %~d0%~p0
+
+:: (cancelled) always cd into the directory of the bat (ie as working directory)
+:: cd /d %~d0%~p0
+
 :: fall back if ECPP is not present
-if not defined ChMacDir @if defined ecppDir (set ChMacDir=%ecppDir%\Data\Batch) else (set ChMacDir=%CD%)
+:: (cancelled) if not defined ChMacDir @if defined ecppDir (set ChMacDir=%ecppDir%\Data\Batch) else (set ChMacDir=%CD%)
+set ChMacDir=%~d0%~p0
 
 :: to manually specify work directory
 if /i "%~1"=="/d" (
@@ -47,16 +84,17 @@ if /i "%~1"=="/d" (
 :: ======================================================== set PATH for some sub-components with no absolute path
 
 :: check if path of subscript folder already set
-echo %path% | find /i "%ChMacDir%\Data\3rdparty" >nul 2>&1
+echo %path% | find /i "%chmacdir%Data\3rdparty" >nul 2>&1
+
 if %errorlevel% NEQ 0 (
 	REM set path for sub-elements
-	set PATH=%ChMacDir%\Data;%ChMacDir%\Data\3rdparty;%ChMacDir%\Data\3rdparty\i386;%PATH%;%ChMacDir%\Data\3rdparty\LP
+	set PATH=%chmacdir%Data;%chmacdir%Data\3rdparty;%chmacdir%Data\3rdparty\i386;%PATH%;%chmacdir%Data\3rdparty\LP
 )
 
 :: ======================================================== TRANSLATION
 
 :: load translations
-call "%ChMacDir%\Data\_translation.bat"&set mTranslation=1
+call "%chmacdir%Data\_translation.bat"&set mTranslation=1
 
 :: ======================================================== check for executables / rights
 
@@ -67,50 +105,64 @@ if "%errorlevel%"=="9009" set noMore=1
 :: detect if system doesn't support "reg"
 reg >nul 2>&1
 if "%errorlevel%"=="9009" (
-	set mErrType=Error: No reg.exe. Place one from XP in "%ChMacDir%\Data\3rdparty\LP"
+	set mErrType=Error: No reg.exe. Place one from XP in "%chmacdir%Data\3rdparty\LP"
 	set mErrCode=5
 	goto :error
 )
 
 :: detect if system doesn't support "devcon"
-devcon >nul 2>&1
-if "%errorlevel%"=="9009" set noDevcon=1
+which devcon >nul 2>&1
+if %errorlevel% NEQ 0 set noDevcon=1
 
 :: detect if system doesn't support "attrib"
 :: attrib >nul 2>&1
 :: if "%errorlevel%"=="9009" (
-:: 	set mErrType=Error: No attrib.exe. Place one from XP in "%ChMacDir%\Data\3rdparty\LP"
+:: 	set mErrType=Error: No attrib.exe. Place one from XP in "%chmacdir%Data\3rdparty\LP"
 :: 	set mErrCode=5
 :: 	goto :error
 :: )
 
 :: getmac takes a long time to load, cannot check that way
 if not exist "%windir%\system32\getmac.exe" (
-	@if not exist "%ChMacDir%\Data\3rdparty\getmac.exe" (
-		@if not exist "%ChMacDir%\Data\3rdparty\LP\getmac.exe" (
-			set mErrType=Error: No getmac.exe. Place one from XP in "%ChMacDir%\Data\3rdparty\LP"
+	@if not exist "%chmacdir%Data\3rdparty\getmac.exe" (
+		@if not exist "%chmacdir%Data\3rdparty\LP\getmac.exe" (
+			set mErrType=Error: No getmac.exe. Place one from XP in "%chmacdir%Data\3rdparty\LP"
 			set mErrCode=5
 			goto :error
 		)
 	)
 )
 
-:: detect for admin rights (it's fine without admin rights with UAC as devcon can elevate itself)
-:: attrib -h "%windir%\system32" | find /i "system32" >nul 2>&1
-:: if %errorlevel% EQU 0 (
-:: 	set noAdmin=1
-:: )
-:: 
-:: if defined ECPP set noAdminEcppMsg= Run RA from ECPP first.
-:: if defined noAdmin (
-:: 	set mErrType=Error: Admin rights are reqired.%noAdminEcppMsg%
-:: 	set mErrCode=7
-:: 	goto :error
-:: )
+:: help parameter check
+
+if /i "%~1"=="/?" (
+	set mHelp=1
+	set mShortHelp=1
+	goto :Help
+)
+
+if /i "%~1"=="/help" (
+	set mHelp=1
+	goto :Help
+)
+
+
+:: detect for admin rights (it's fine without admin rights with UAC as devcon can elevate itself -- unless UAC is disabled)
+attrib -h "%windir%\system32" | find /i "system32" >nul 2>&1
+if %errorlevel% EQU 0 (
+	set noAdmin=1
+)
+
+if defined ECPP set noAdminEcppMsg= Run RA from ECPP first.
+if defined noAdmin (
+	set mErrType=Error: No admin right. Please run as admin.%noAdminEcppMsg%
+	set mErrCode=7
+	goto :error
+)
 
 :: elevate as admin or output error, unless its already been elevated 1 time
 :: if defined noAdmin @if not defined secondRun ("%ecppDir%\Data\Batch\3rdparty\HP\elevate.cmd" "%comspec%" /c start "" /D "%ecppDir%\data\batch\tasks\ChMac\" "ChMac.bat" /2ndtime) else (echo.&echo :: Sorry. Admin rights are required.&echo.&pause&exit)
-:: (cancalled because devcon.exe wouldn't be in path)
+:: (cancelled because devcon.exe wouldn't be in path)
 
 :: ======================================================== parameter and input check
 
@@ -135,7 +187,7 @@ if /i "%~1"=="/m" (
 		)
 	)
 	REM check for non hex
-	echo !mCmdNewMac!| "%ChMacDir%\Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
+	echo !mCmdNewMac!| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
 	@if !errorlevel! EQU 0 (
 		set mErrType=Syntax Error: Not hexadecimal ^(/M^)
 		set mErrCode=4
@@ -149,7 +201,7 @@ if /i "%~1"=="/m" (
 
 if /i "%~1"=="/n" (
 	REM check for non digit
-	echo %~2| "%ChMacDir%\Data\3rdparty\grep.exe" "[^[:digit:]]" >nul 2>&1
+	echo "%~2"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" "[^[:digit:]]" >nul 2>&1
 	@if !errorlevel! EQU 0 (
 		set mErrType=Syntax Error: Not digit ^(/N^)
 		set mErrCode=4
@@ -162,21 +214,39 @@ if /i "%~1"=="/n" (
 	goto :parameterCheck
 )
 
+if /i "%~1"=="/r" (
+	set mCmd=1
+	set mRestoreOriginalMac=1
+	shift
+	goto :parameterCheck
+)
+
+if /i "%~1"=="/a" (
+	REM check for non digit
+	echo "%~2"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
+	@if !errorlevel! NEQ 0 (
+		set mErrType=Syntax Error: Not digit or smhd ^(/A^)
+		set mErrCode=4
+		goto :error
+	)
+	set mAutoChangeInterval=%~2
+	REM convert to lowercase since sleep.exe doesn't accept uppercase
+	@for /f "usebackq tokens=* delims=" %%i in (`echo !mAutoChangeInterval!^|"%chmacdir%Data\3rdparty\tr.exe" "[:upper:]" "[:lower:]"`) do set mAutoChangeInterval=%%i
+	set mCmd=1
+	shift
+	shift
+	goto :parameterCheck
+)
+
 if /i "%~1"=="/l" (
 	set mCmdList=1
 	set mCmd=1
 	goto :ChMac
 )
 
-if /i "%~1"=="/?" (
-	set mHelp=1
-	set mShortHelp=1
-	goto :Help
-)
-
-if /i "%~1"=="/help" (
-	set mHelp=1
-	goto :Help
+if /i "%~1"=="/u" (
+	call "%chmacdir%Data\_update2.bat" /ud
+	goto :end
 )
 
 if /i "%~1"=="/d" (
@@ -191,17 +261,40 @@ if defined mCmdNewMac @if not defined mCmdAdapterNum (
 	goto :error
 )
 
+REM check for -
+echo "%~1"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^-" >nul 2>&1
+@if %errorlevel% EQU 0 (
+	set mErrType=Syntax Error: Please use "/" instead of '-'
+	set mErrCode=4
+	goto :error
+)
+
+REM check for any left wrong parameter
+:: echo "%~1"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^/" >nul 2>&1
+:: @if %errorlevel% EQU 0 (
+:: 	set mErrType=Syntax Error: Unknown parameter
+:: 	set mErrCode=4
+:: 	goto :error
+:: )
+
+REM check for any left wrong parameter
+if "%~1" NEQ "" (
+	set mErrType=Syntax Error: Unknown parameter: "%~1"
+	set mErrCode=4
+	goto :error
+)
+
 REM in command line mode title is not shown
-if not defined mCmd title ChMac v1.0 - Download DevCon.exe
+if not defined mCmd title ChMac v1.1 - Download DevCon.exe
 
 if not defined noDevcon goto :MainMenu
-if exist "%ChMacDir%\Data\skipInit" goto :MainMenu
+if exist "%chmacdir%Data\skipInit" goto :MainMenu
 :Reminder
 cls
 echo.
 echo :: ChMac can be enhanced with DevCon.exe. Without it ChMac works too,
-echo    but when done you'll be presented with Network Connections folder
-echo    to manually disable and enable the adapter to reflect changes
+echo    but at the end the Network Connections folder will be presented so as
+echo    to manually disable and enable the adapter for changes to take effect.
 echo.
 echo :: Available choices:
 echo.
@@ -213,11 +306,11 @@ echo    3. Continue and remind me next time
 echo.
 echo    4. Continue and never remind me again
 echo.
-call "%ChMacDir%\Data\_choiceMulti.bat" /msg ":: Please choose [1,2,3,4] " /errorlevel 4
+call "%chmacdir%Data\_choiceMulti.bat" /msg ":: Please choose [1,2,3,4] " /errorlevel 4
 set cmReminderChoice=%errorlevel%
 echo.
-if %cmReminderChoice% EQU 4 (echo skipInit>"%ChMacDir%\Data\skipInit")&goto :MainMenu
-if %cmReminderChoice% EQU 3 (del "%ChMacDir%\Data\skipInit" /f /q >nul 2>&1)&goto :MainMenu
+if %cmReminderChoice% EQU 4 (echo skipInit>"%chmacdir%Data\skipInit")&goto :MainMenu
+if %cmReminderChoice% EQU 3 (del "%chmacdir%Data\skipInit" /f /q >nul 2>&1)&goto :MainMenu
 :ReminderOption2
 if %cmReminderChoice% EQU 2 (
 	cls
@@ -225,10 +318,10 @@ if %cmReminderChoice% EQU 2 (
 	echo :: A web page will be opened in 5 seconds. Please wait.
 	echo.
 	echo    After the download, run the exe which is a self-extracting
-	echo    archive. Then just click "Unzip". Do NOT modify the folder.
+	echo    archive. Then just click "Unzip". Do NOT modify the path.
 	echo.
-	echo :: Press any key after the above has been performed."
-	"%ChMacDir%\Data\3rdparty\sleep.exe" 5
+	echo :: Press any key here after the above has been performed.
+	"%chmacdir%Data\3rdparty\sleep.exe" 5
 	start http://support.microsoft.com/kb/311272
 	pause >nul 2>&1
 	@if not exist "%temp%\i386\devcon.exe" (
@@ -254,11 +347,12 @@ if %cmReminderChoice% EQU 1 (
 		echo.
 		echo #   Please try again or choose another option.
 		echo.
+		del devcon_package.exe /f /q >nul 2>&1
 		pause
 		goto :Reminder
 	)
 	echo 
-	echo :: Just click "Unzip" and close. Do NOT change the folder path.
+	echo :: Just click "Unzip" and close. Do NOT change the path.
 	echo.
 	devcon_package.exe
 	del devcon_package.exe /f /q >nul 2>&1
@@ -272,8 +366,8 @@ if %cmReminderChoice% EQU 1 (
 		pause
 		goto :ReminderOption1
 	)
-	copy "%temp%\i386\devcon.exe" "%ChMacDir%\Data\3rdparty\devcon.exe" /y >nul 2>&1
-	copy "%temp%\EULA.txt" "%ChMacDir%\Data\3rdparty\devcon-EULA.txt" /y >nul 2>&1
+	copy "%temp%\i386\devcon.exe" "%chmacdir%Data\3rdparty\devcon.exe" /y >nul 2>&1
+	copy "%temp%\EULA.txt" "%chmacdir%Data\3rdparty\devcon-EULA.txt" /y >nul 2>&1
 	goto :MainMenu
 )
 goto :Reminder
@@ -281,15 +375,15 @@ goto :Reminder
 :MainMenu
 :: mTitleConsoleMsg is for title below; mOperationTypeMsg is used for summary
 if defined mCmd (set mOperationTypeMsg=Command-line) else (set mTitleConsoleMsg=Interactive Console&set mOperationTypeMsg=Interactive)
-title ChMac v1.0 %mTitleConsoleMsg%
 :: menu not implemented
 
 :ChMac
+title ChMac v1.1 %mTitleConsoleMsg%
 :: less is displayed in command line mode than in interactive
 if not defined mCmd (
 	cls
 	set mNumOfAdapters=0
-	set mNumofAdapterChoice=1
+	@if not defined mRerun set mNumofAdapterChoice=1
 	echo.
 	echo :: Please wait a bit while ChMac initializes...
 	echo.
@@ -308,9 +402,10 @@ if %mNumOfAdapters% EQU 0 (
 )
 
 :ChMacLoaded
-set IsVirtualAdapter=
+set mIsVirtualAdapter=
 set mErrorLevel=
 if not defined mCmd (
+	set mRestoreOriginalMac=
 	cls
 	echo.
 	echo :: Number of network adapters detected: %mNumOfAdapters%
@@ -342,14 +437,14 @@ REM add a few more options, e.g. Quit
 set /a mNumPlusOne=%mNumOfAdapters%+1
 set /a mNumPlusTwo=%mNumOfAdapters%+2
 @if not defined mRerun set mNumofAdapterChoice=!mNumofAdapterChoice!,%mNumPlusOne%,%mNumPlusTwo%
-if /i "%mAutoChangeInterval%" NEQ "None" set mAutoChangeIntervalMsg=^(Auto-change: %mAutoChangeInterval%^)
-echo    %mNumPlusOne%. Options %mAutoChangeIntervalMsg%
+if /i "%mAutoChangeInterval%" NEQ "None" (set mAutoChangeIntervalMsg=^(%mAutoChangeInterval%^)) else (set mAutoChangeIntervalMsg=)
+echo    %mNumPlusOne%. Configure auto-changing %mAutoChangeIntervalMsg%
 echo.
-echo    %mNumPlusTwo%. Quit
+echo    %mNumPlusTwo%. Exit
 echo.
 :: check if there are more than 8 adapters (including the Quit, then 9)
 if not %mNumOfAdapters% GEQ 9 (
-  call "%ChMacDir%\Data\_choiceMulti.bat" /msg ":: Please make a choice [%mNumofAdapterChoice%] " /errorlevel %mNumPlusTwo%
+  call "%chmacdir%Data\_choiceMulti.bat" /msg ":: Please make a choice [%mNumofAdapterChoice%] " /errorlevel %mNumPlusTwo%
 ) else (
   set /p mErrorLevel=:: Please make a choice [%mNumofAdapterChoice%] 
 )
@@ -360,10 +455,56 @@ if not %mNumOfAdapters% GEQ 9 (
 if not defined mErrorLevel set mErrorLevel=%errorlevel%
 :DefineInterval
 if %mErrorLevel% EQU %mNumPlusOne% (
-	goto :OptionsMenu
+	cls
+	echo.
+	echo :: Specify an interval to automatically change random MAC address.
+	echo.
+	echo    Suffix may be s for seconds, m for minutes, h for hours or d for days,
+	echo.   e.g. enter '20m' for a 20-minute schedule. [X] to reset and exit.
+	echo.
+	echo    ^(This is useful for free Wi-Fi hotspots with time limits.^)
+	echo.
+	set /p mAutoChangeInterval=:: Input [0-9smhd,X]: 
+	REM check if interval is reset
+	if /i "!mAutoChangeInterval!"=="x" set mAutoChangeInterval=None&set mRerun=1&goto :ChMacLoaded
+	REM check if not only digit
+	echo !mAutoChangeInterval!|"%chmacdir%Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
+	@if !errorlevel! NEQ 0 goto :DefineInterval
+	REM convert to lowercase since sleep.exe doesn't accept uppercase
+	@for /f "usebackq tokens=* delims=" %%i in (`echo !mAutoChangeInterval!^|"%chmacdir%Data\3rdparty\tr.exe" "[:upper:]" "[:lower:]"`) do set mAutoChangeInterval=%%i
+	set mRerun=1
+	goto :ChMacLoaded
 )
 if %mErrorLevel% EQU %mNumPlusTwo% (
-	goto :EOF
+  cls
+  echo.
+  echo    Thanks for using ChMac v1.1
+  echo.
+  sleep 1s >nul 2>&1
+  cls
+  REM echo    To check for updates, perform "chmac /u".
+  REM echo.
+  REM echo.  
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo.
+  REM echo    2
+  REM sleep 1s >nul 2>&1
+  REM echo.
+  REM echo    1
+  REM sleep 1s >nul 2>&1
+  goto :end
 )
 :CmdAdapterNum
 :: start point for command line /N (manually set network adapter ID). it then becomes mChosenAdapterNum just as in interactive mode
@@ -395,7 +536,7 @@ if not defined mChosenCorrectly (
 
 
 :: detect if chosen adapter is non-operational -- check MAC address field for non hex/-
-echo !mMac%mChosenAdapterNum%!| "%ChMacDir%\Data\3rdparty\grep.exe" "[^[:xdigit:]-]" >nul 2>&1
+echo !mMac%mChosenAdapterNum%!| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]-]" >nul 2>&1
 if %errorlevel% EQU 0 (
 	@if defined mCmd (
 		echo ___________________________________________________________________
@@ -407,7 +548,7 @@ if %errorlevel% EQU 0 (
 		echo 
 		echo :: Error: Adapter in a nonoperational state.
 		echo.
-		call "%ChMacDir%\Data\_choiceYN.bat" ":: Start Device Manager for debugging? [Y,N] " N 60
+		call "%chmacdir%Data\_choiceYN.bat" ":: Start Device Manager for debugging? [Y,N] " N 60
 		@if %errorlevel% EQU 0 devmgmt.msc
 		set mRerun=1
 		goto :ChMac
@@ -420,7 +561,7 @@ echo "!mID%mChosenAdapterNum%!"| find /i "Tcpip_" >nul 2>&1
 if %errorlevel% NEQ 0 (
 	@if defined mCmd (
 		echo ___________________________________________________________________
-		set mErrType=Error: Adapter unplugged. Please connect first, 
+		set mErrType=Error: Adapter unplugged. Please connect first
 		set mErrCode=3
 		goto :error	
 	) else (
@@ -428,7 +569,7 @@ if %errorlevel% NEQ 0 (
 		echo 
 		echo :: Error: Adapter unplugged.
 		echo.
-		echo Connect first, then press any key.
+		echo Connect first, then press any key ^(or CTRL+C to exit^)
 		pause >nul
 		set mCmdAdapterNum=%mChosenAdapterNum%
 		set mRerun=1
@@ -438,9 +579,7 @@ if %errorlevel% NEQ 0 (
 
 :: detect if chosen adapter is virtual, for an error shown after summary if operation failed.
 echo !mAdapter%mChosenAdapterNum%! | find /i "Virtual" >nul 2>&1
-if %errorlevel% EQU 0 set IsVirtualAdapter=1
-
-if not defined mCmd goto :AdapterMenu
+if %errorlevel% EQU 0 set mIsVirtualAdapter=1
 
 :randomize
 
@@ -465,7 +604,7 @@ if defined mCmd @if defined mCmdNewMac (
 :: if auto-change interval was specified, the randomize function will begin at :apply instead
 if /i "%mAutoChangeInterval%" NEQ "None" goto :apply
 
-call :Randomize2
+call :RandomizeFunction
 
 :: if cmd mode and randomization is specified
 if defined mCmd set mNewMac=%mNewRanMac%&goto :apply
@@ -477,19 +616,33 @@ for /f "usebackq tokens=* delims=" %%i in (`ECHO %mNewRanMac%^|sed "s/\(..\)\(..
 
 
 :InputMac
+:: set mNewMac=
+set mMacInputted=
+set mRestoreOriginalMac=
 echo ___________________________________________________________________
 echo.
 echo :: You've chosen: [%mChosenAdapterNum%] !mName%mChosenAdapterNum%!
-echo    Current MAC address: %mOldMacFriendly%
 echo.
-echo :: We've randomized one for you. To accept it, just press [ENTER]
-echo    Or you may input a new one then press [ENTER]
+echo    Current MAC address:  	%mOldMacFriendly%
+echo    New randomized address: 	%mNewRanMacFriendly% [OUI: %mOuiVendor%]
 echo.
-echo    Randomly chosen address: %mNewRanMacFriendly%
-echo.
-set /p mNewMac=:: Accept or input a new one here: 
+set /p mNewMac=:: [A] Accept  [G] Gen  [O] OUI  [R] Reset  [X] Exit  or type MAC: 
 
-if /i "%mNewMac%" EQU "" set mNewMac=%mNewRanMac%
+if "%mNewMac%"=="" goto :InputMac
+if /i "%mNewMac%" EQU "X" set mRerun=1&goto :ChMacLoaded
+if /i "%mNewMac%" EQU "G" goto :randomize
+if /i "%mNewMac%" EQU "O" start "" notepad "%chmacdir%Data\OUI_NT6.txt"&start "" notepad "%chmacdir%Data\OUI_NT5.txt"&goto :InputMac
+if /i "%mNewMac%" EQU "A" set mNewMac=%mNewRanMac%
+if /i "%mNewMac%" EQU "R" (
+	set mRestoreOriginalMac=1
+	echo ___________________________________________________________________
+	echo.
+	echo :: Restoring original MAC address
+	echo ___________________________________________________________________
+	goto :apply
+)
+
+set mMacInputted=1
 
 :: strip input of unnecessary things (+ convert to caps)
 for /f "usebackq tokens=* delims=" %%i in (`echo "%mNewMac%"^| tr.exe -s "[:punct:][:cntrl:][:space:]" " " ^| tr.exe "a-z" "A-Z" ^| sed.exe -e "s/^.//g" -e "s/.$//g"`) do set mNewMac=%%i
@@ -506,7 +659,7 @@ for /f "usebackq" %%i in (`echo %mNewMac%^| wc.exe -m`) do (
 		@if /i "%%i" NEQ "12" (
 			echo ___________________________________________________________________
 			echo.
-			echo :: Wrong address length [12/17]. Please try again.
+			echo :: Wrong length. Try either 12 chars or 17 with hyphen [-] or colon [:]
 			set mNewMac=%mNewRanMac%
 			goto :InputMac
 		)
@@ -514,7 +667,7 @@ for /f "usebackq" %%i in (`echo %mNewMac%^| wc.exe -m`) do (
 )
 
 :: check for non hex
-echo %mNewMac%| "%ChMacDir%\Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
+echo %mNewMac%| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
 if %errorlevel% EQU 0 (
 	echo ___________________________________________________________________
 	echo.
@@ -532,7 +685,7 @@ for /f "usebackq tokens=* delims=" %%i in (`ECHO %mNewMac%^|sed "s/\(..\)\(..\)\
 echo.
 echo :: Please confirm, your new MAC address is %mNewMacFriendly%
 echo.
-call "%ChMacDir%\Data\_choiceYN.bat" ":: Are you sure to apply it? [Y,N] " N 60
+call "%chmacdir%Data\_choiceYN.bat" ":: Are you sure to apply it? [Y,N] " N 60
 echo ___________________________________________________________________
 if %errorlevel% NEQ 0 (
   REM reset the mNewMac variable
@@ -551,7 +704,7 @@ if defined debug @echo on
 :: if auto-change specified, script will loop back to :apply and randomize a new MAC address non-stop 
 if /i "%mAutoChangeInterval%" NEQ "None" (
 	echo ___________________________________________________________________
-	call :Randomize2
+	call :RandomizeFunction
 )
 
 for /f "usebackq delims={ tokens=2" %%i in (`echo !mID%mChosenAdapterNum%!`) do set mChosenAdapterID={%%i
@@ -573,7 +726,11 @@ for /l %%i in (10,1,99) do (
 echo.
 echo :: Found adapter at {4D36E972-E325-11CE-BFC1-08002BE10318}\%mAdapterRegNum%
 
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\%mAdapterRegNum%" /t REG_SZ /v "NetworkAddress" /d "%mNewMac%" /f 
+if defined mRestoreOriginalMac (
+	reg delete "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\%mAdapterRegNum%" /v "NetworkAddress" /f >nul 2>&1
+) else (
+	reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\%mAdapterRegNum%" /t REG_SZ /v "NetworkAddress" /d "%mNewMac%" /f 
+)
 
 :: grab Device Instance ID for use with Devcon
 for /f "usebackq tokens=3" %%i in (`reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\%mAdapterRegNum%" /v "MatchingDeviceId"`) do (
@@ -603,20 +760,35 @@ if %errorlevel% NEQ 0 (
 )
 
 ipconfig /all > "%temp%\ipConfigAll.tmp"
-"%ChMacDir%\Data\3rdparty\sed.exe" "s/[^[:xdigit:]]//g" < "%temp%\ipConfigAll.tmp" | find /i "%mNewMac%" >nul 2>&1
+"%chmacdir%Data\3rdparty\sed.exe" "s/[^[:xdigit:]]//g" < "%temp%\ipConfigAll.tmp" | find /i "%mNewMac%" >nul 2>&1
 if %errorlevel% EQU 0 (
 	set mSuccessOrFailure=Success&set mErrCode=0
+) else if defined mRestoreOriginalMac (
+	set mSuccessOrFailure=See 'ipconfig /all'
 ) else (
 	set mSuccessOrFailure=Failure&set mErrCode=1&echo 
 )
 
 :: For "Device restarted" msg in summary
-if defined noDevcon (set mDevconMsg=No) else (set mDevconMsg=Yes)
+if defined noDevcon (set mDevconMsg=Manual) else (set mDevconMsg=Auto)
 
 :: Convert MAC address into user-friendly form (2)
 
 for /f "usebackq tokens=* delims=" %%i in (`ECHO %mOldMac%^|sed "s/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1-\2-\3-\4-\5-\6/g"`) do set mOldMacFriendly=%%i
 for /f "usebackq tokens=* delims=" %%i in (`ECHO %mNewMac%^|sed "s/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1-\2-\3-\4-\5-\6/g"`) do set mNewMacFriendly=%%i
+if defined mRestoreOriginalMac set mNewMacFriendly=Restored to original
+
+:: check for update
+if /i "%mAutoChangeInterval%" EQU "None" (
+	@if /i "%mUpdateChMac%"=="Y" (
+		REM without /ud
+		call "%chmacdir%Data\_update2.bat"
+		@if !errorlevel! EQU 222 (
+			echo.
+			echo :: New version has been found - http://wandersick.blogspot.com
+		)
+	)
+)
 
 echo ___________________________________________________________________
 echo.
@@ -632,7 +804,8 @@ echo :: Nic Name          :   !mAdapter%mChosenAdapterNum%:~0,53!
 echo :: Nic ID            :   %mChosenAdapterNum%
 echo :: Enum ID           :   "{4D36E972-E325-11CE-BFC1-08002BE10318}\%mAdapterRegNum%"
 echo :: Plug 'n Play ID   :   %mDeviceId:~0,52%
-echo :: Old Mac address   :   %mOldMacFriendly%
+:: will figout why old mac addr dont display correctly when auto change is defined
+if /i "%mAutoChangeInterval%" EQU "None" echo :: Old Mac address   :   %mOldMacFriendly%
 echo :: New Mac address   :   %mNewMacFriendly%
 echo :: Randomized        :   %mRandomizedMsg%
 echo :: Device restarted  :   %mDevconMsg%
@@ -642,15 +815,28 @@ echo :: Completed time    :   %Date% %time:~0,-6%
 echo ___________________________________________________________________
 echo.
 
+:: blacklist current MAC not to be used again for randomization in the current session (can be specified manually tho)
+
+echo %mNewMac% >> "%temp%\exclMac.tmp"
+
+set mOldMac=
+set mOldMacFriendly=
+set mNewMac=
+set mNewMacFriendly=
+set mNewRanMac=
+set mNewRanMacFriendly=
+
 if /i "%mAutoChangeInterval%" NEQ "None" (
 	goto :AutoChangeInterval
 )
 
-:: extra msg for virtual adapter
-if defined IsVirtualAdapter (set IsVirtualAdapterMsg=Normal for some virtual adapters.) else (set IsVirtualAdapterMsg=)
 
+:: extra msg for virtual adapter
+if defined mIsVirtualAdapter (set mIsVirtualAdapterMsg=Unsupported virtual adapter.) else (set mIsVirtualAdapterMsg=Try another OUI or restart the adapter.)
+
+title ChMac v1.1 - Please send feedback to http://wandersick.blogspot.com
 if "%mSuccessOrFailure%" EQU "Failure" (
-	echo :: Error: Address changing might fail. %IsVirtualAdapterMsg%
+	echo :: Error: MAC change failed. %mIsVirtualAdapterMsg%
 	echo.
 ) else (
 	echo :: Finished.
@@ -658,7 +844,8 @@ if "%mSuccessOrFailure%" EQU "Failure" (
 )
 
 if defined mCmd goto :end
-call "%ChMacDir%\Data\_choiceYN.bat" ":: Run 'ipconfig /all' to verify new address? [Y,N] " N 60
+set mNewMac=
+call "%chmacdir%Data\_choiceYN.bat" ":: Run 'ipconfig /all' to verify new address? [Y,N] " N 60
 if %errorlevel% EQU 0 (
 	echo ___________________________________________________________________
 	echo.
@@ -671,18 +858,25 @@ if %errorlevel% EQU 0 (
 	pause
 )
 if defined noDevcon (
-	echo ___________________________________________________________________
-	echo.
-	call "%ChMacDir%\Data\_choiceYN.bat" ":: DevCon was not available. Download it? [Y,N] " N 60
-	@if !errorlevel! EQU 0 (goto :Reminder) else (goto :end)
+	REM check again to ensure it has just been downloaded.
+	devcon >nul 2>&1
+	if "!errorlevel!"=="9009" (
+		echo ___________________________________________________________________
+		echo.
+		call "%chmacdir%Data\_choiceYN.bat" ":: DevCon was not available. Download it? [Y,N] " N 60
+		@if !errorlevel! EQU 0 (goto :Reminder)
+	)
 )
-goto :ChMacLoaded
+set mRerun=1
+goto :ChMac
 :end
 endlocal&exit /b %mErrCode%
 
 :error
 echo.
 echo #  %mErrType%
+echo.
+pause
 goto :end
 
 :AutoChangeInterval
@@ -692,111 +886,65 @@ set /a mAutoChangeTries+=1
 echo :: Auto-change interval set. Waiting: %mAutoChangeInterval% ^(Try: %mAutoChangeTries%^)
 echo.
 echo :: To stop, press [CTRL+C] or close this.
-"%ChMacDir%\Data\3rdparty\sleep.exe" %mAutoChangeInterval%
+"%chmacdir%Data\3rdparty\sleep.exe" %mAutoChangeInterval%
 :: update old mac value for display at next summary
 set mOldMac=%mNewMac%
 goto :apply
 
-:Randomize2
-
-:: randomize a new MAC address, OUT part kept
+:RandomizeFunction
+set mOuiAlt=
+:: don't randomize a new MAC address, keep current OUT part if OUI.txt doesn't exist in 'Data' folder
+set mOuiVendor=Original
 set mOui=%mOldMac:~0,6%
 set mNic=%random:~0,1%%random:~0,1%%random:~0,1%%random:~0,1%%random:~0,1%%random:~0,1%
 set mNewRanMac=%mOui%%mNic%
+
+:: randomize a new MAC address using OUI.txt
+set mRandomSkipNum= skip=%random:~0,1%
+
+:: if it is 0, it returns weird stuff, so the whole 'skip=0' must be removed or start from 1 or re-generate
+:: it very rarely returns 0, for unknown reasons, hence the whole process would be very slow... for retrying and retrying... until it returns 0.
+:: so 0 became VENDOR=OUI and not used instead. regenerate if 0.
+if /i "%mRandomSkipNum%"==" skip=000" (
+	goto :RandomizeFunction
+) else if /i "%mRandomSkipNum%"==" skip=00" (
+	goto :RandomizeFunction
+) else if /i "%mRandomSkipNum%"==" skip=0" (
+	goto :RandomizeFunction
+)
+
+if OSver GTR 5.2 (
+	if exist "%chmacdir%Data\OUI_NT6.txt" (
+		@for /f "delims== tokens=1,2 usebackq%mRandomSkipNum%" %%i in ("%chmacdir%Data\OUI_NT6.txt") do set mOuiVendor=%%i&set mOuiAlt=%%j&set mNewRanMac=!mOuiAlt!%mNic%&goto :exitRanOuiLoop
+	)
+)
+
+if OSver LSS 6.0 (
+	if exist "%chmacdir%Data\OUI_NT5.txt" (
+		@for /f "delims== tokens=1,2 usebackq%mRandomSkipNum%" %%i in ("%chmacdir%Data\OUI_NT5.txt") do set mOuiVendor=%%i&set mOuiAlt=%%j&set mNewRanMac=!mOuiAlt!%mNic%&goto :exitRanOuiLoop
+	)
+)
+
+:exitRanOuiLoop
+:: check if the skip number points to a valid point in the file. if not, go back and re-generate
+if "%mOuiAlt%"=="" goto :RandomizeFunction
+
+:: prevent the randomized MAC address from being used twice in the same session
+if exist "%temp%\exclMac.tmp" (
+	for /f "usebackq tokens=* delims=" %%i in (`type "%temp%\exclMac.tmp"`) do @if /i "%mNewRanMac%" EQU "%%i" goto :RandomizeFunction
+)
+
 if /i "%mAutoChangeInterval%" NEQ "None" set mNewMac=%mNewRanMac%
 
-if /i "%mAutoChangeInterval%" NEQ "None" (set mRandomizedMsg=Yes ^(auto-changing^)) else (set mRandomizedMsg=Yes)
-goto :EOF
-
-:AdapterMenu
-
-cls
-echo.
-echo :: Select an option
-echo.
-echo    1. ChMac now^^^!
-echo.
-echo    2. Auto-change address ^(%mAutoChangeInterval%^)
-echo.
-echo    3. Restore original address
-echo.
-echo    4. Disable and enable adapter
-echo.
-echo    5. Reinstall adapter
-echo.
-echo    6. Go back
-echo.
-call "%ChMacDir%\Data\_choiceMulti.bat" /msg ":: Please enter [1,2,3,4,5,6] " /errorlevel 6
-if %errorlevel% EQU 6 (
-	REM set rerun on submenus to prevent: Please make a choice [1,2,3,4,5,2,3,4,5,2,3,4,5,2,3,4,5]
-	set mRerun=1
-	goto :ChMacLoaded
-)
-if %errorlevel% EQU 3 (
-	goto :RestoreAddress
-)
-if %errorlevel% EQU 2 (
-	goto :AutoChangeMenu
-)
-if %errorlevel% EQU 1 (
-	goto :Randomize
-)
-
-:OptionsMenu
-
-cls
-echo.
-echo :: Select an option
-echo.
-echo    1. Auto-change interval ^(%mAutoChangeInterval%^)
-echo.
-echo    2. Restore original MAC address
-echo.
-echo    3. Documentation
-echo.
-echo    4. Check for update
-echo.
-echo    5. Go back
-echo.
-call "%ChMacDir%\Data\_choiceMulti.bat" /msg ":: Please enter [1,2,3,4,5] " /errorlevel 5
-if %errorlevel% EQU 5 (
-	set mRerun=1
-	goto :ChMacLoaded
-)
-if %errorlevel% EQU 4 (
-	call "%ChMacDir%\Data\_update.bat"
-)
-if %errorlevel% EQU 3 (
-	@if not defined noMore (
-		more /E "%ChMacDir%\Data\readme.txt"
-	) else (
-		type "%ChMacDir%\Data\readme.txt"
+if /i "%mAutoChangeInterval%" NEQ "None" (
+	set mRandomizedMsg=Yes ^(auto-changing^)
+) else (
+	REM if MAC is not manually inputted but randomly generated
+	@if "%mMacInputted%" NEQ "1" (
+		set mRandomizedMsg=Yes
 	)
-	call :ChineseHelpNotice
-	pause
 )
-if %errorlevel% EQU 2 (
-	echo hi ***************************************
-)
-if %errorlevel% EQU 1 goto :AutoChangeMenu
-
-goto :OptionsMenu
-
-:AutoChangeMenu
-cls
-echo.
-echo :: Specify an interval to automatically change random MAC address.
-echo.
-echo    Suffix may be s for seconds, m for minutes, h for hours or d for days.
-echo.   For ex, enter '20m' for a 20-minute schedule. Or enter [X] to cancel.
-echo.
-set /p mAutoChangeInterval=:: Input: 
-:: check if not only digit
-echo !mAutoChangeInterval!| "%ChMacDir%\Data\3rdparty\grep.exe" -i -E "[^0-9smhdx]" >nul 2>&1
-if !errorlevel! EQU 0 goto :DefineInterval
-if /i "!mAutoChangeInterval!"=="x" set mAutoChangeInterval=None&goto :AdapterMenu
-echo.
-goto :AdapterMenu
+goto :EOF
 
 :: ======================================================== HELP DOC
 
@@ -849,6 +997,8 @@ echo     it, but will show the Network Connections folder when finished, so that
 echo     users can manually disable and re-enable the adapter for new settings to
 echo     take effect. On 1st run users are asked to download DevCon to avoid that.
 echo.
+echo  #  New MAC addresses can be randomized from a list of 13476 OUIs.
+echo.
 echo  #  Multilingual interface. ^(See tip 5^)
 echo.
 echo  #  Free software. Written in poorly commented Batch. Any codes of anything
@@ -865,15 +1015,19 @@ echo.
 :helpSkip1
 echo     [ Parameters ]
 echo.
-echo  #  ChMac [/d dir][/l][/m address][/n id][/help][/?]
+echo  #  ChMac [/d dir][/l][/m address][/n id][/r][/u][/help][/?]
 echo.
-echo     /d dir        :: working directory -- maybe required
+echo     /d       dir  :: working directory -- maybe required
 echo                      ^(MUST be specified before other parameters^)
 echo     /l            :: list network adapters and their IDs
 echo     /m            :: new mac address to be applied.
 echo     /n            :: adapter to be applied new mac address
 echo                      if /m is unspecified. New mac address will be
 echo                      randomized ^(OUI kept^) and automatically filled.
+echo     /r            :: restore to original MAC address
+echo     /a            :: auto-change interval
+echo     /u            :: check for program update ^(by default program checks
+echo                      for update silently - can be turned off in conf^)
 echo.
 echo  #  The mac address format can be any of the following:
 echo.
@@ -891,6 +1045,8 @@ echo     . chmac /n 1                   :: update network adapter #1 with
 echo                                       randomized mac address numbers.
 echo     . chmac /m 00301812AB01 /n 2   :: update network adapter #2 with the
 echo                                       new mac address: 00-30-18-12-AB-01
+echo     . chmac /n 3 /r                :: restore adapter 3 to its original MAC
+echo     . chmac /n 4 /a 20m            :: auto-change MAC per 20 minute
 echo     . chmac /?                     :: shows short help. [/help] for long.
 echo.
 echo     [ Return codes ]
@@ -904,27 +1060,18 @@ if defined mShortHelp (
 	call :ChineseHelpNotice
 	goto :end
 )
-echo     [ Tip ]
-echo.
-echo  #  By default the interface language ^(not dictionary language^) auto-
-echo     adjusts between English, Chinese Simplified and Traditional by detecting
-echo     the current user setting of Windows. To forcibly use English, create a
-echo     file named _EN in ChMac dir. Although _CHT and _CHS are also supported,
-echo     it is not recommended to set it to anything but English as characters
-echo     may not show properly in systems with other non-unicode program settings.
-echo.
 echo     [ Limitations ]
 echo.
-echo  #  1. Unless through the interactive interface, there is no way to specify
-echo        an auto-changing interval. For this, please use ChMac with Schtasks.
+echo  #  1. While it may seem this program is multi-lingual, only English has been
+echo        implemented for this version.
 echo.
 echo     2. Some virtual adapters are unsupported.
 echo.
-echo     [ Suggestion ]
+echo     [ Suggestion? ]
 echo.
 echo  #  Please drop me a line by email or the web site atop.
 call :ChineseHelpNotice
 set mHelp=
 goto :end
 
-:end9x
+:end9x	

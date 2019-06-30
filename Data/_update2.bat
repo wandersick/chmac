@@ -15,8 +15,11 @@
 :: along with ChMac.  If not, see <http://www.gnu.org/licenses/>.
 
 :: ------------------------------------------------------------
-:: See main script -- fy.cmd -- for more details.
+:: See main script -- ChMac.bat -- for more details.
 :: ------------------------------------------------------------
+
+:: When /ud is not specified, no message is shown.
+:: This _update2.bat will return code 222 when an update is found.
 
 @echo off
 
@@ -36,9 +39,9 @@ pushd %temp%
 :: REMINDER: keep "Enhanced Command Prompt Portable 2.0 Final" on server
 :: REMINDER: if it has space, replace with +
 for %%i in ("ws.chmac.10a" "ws.chmac.11" "ws.chmac.15" "ws.chmac.20" "ws.chmac.20b") do (
-	del cmdDictUpdate.tmp /F /Q >nul 2>&1
-	REM "%ChMacDir%\Data\3rdparty\wget.exe" --output-document=cmdDictUpdate.tmp --include-directories=www.google.com --accept=html -t2 -E -e robots=off -T 8 -U "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040613 Firefox/0.8.0+" "http://www.google.com/search?as_q=&hl=en-US&num=10&as_epq=%%~i&as_oq=&as_eq=&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&as_dt=i&as_sitesearch=wandersick.blogspot.com" >nul 2>&1
-	"%ChMacDir%\Data\3rdparty\curl.exe" "http://www.google.com/search?as_q=&hl=en-US&num=10&as_epq=%%~i&as_oq=&as_eq=&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&as_dt=i&as_sitesearch=wandersick.blogspot.com" -A "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040613 Firefox/0.8.0+" --retry 1 -m 8 -o cmdDictUpdate.tmp >nul 2>&1
+	del ChMacUpdate.tmp /F /Q >nul 2>&1
+	REM "%ChMacDir%\Data\3rdparty\wget.exe" --output-document=ChMacUpdate.tmp --include-directories=www.google.com --accept=html -t2 -E -e robots=off -T 8 -U "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040613 Firefox/0.8.0+" "http://www.google.com/search?as_q=&hl=en-US&num=10&as_epq=%%~i&as_oq=&as_eq=&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&as_dt=i&as_sitesearch=wandersick.blogspot.com" >nul 2>&1
+	"%ChMacDir%\Data\3rdparty\curl.exe" "http://www.google.com/search?as_q=&hl=en-US&num=10&as_epq=%%~i&as_oq=&as_eq=&lr=&cr=&as_ft=i&as_filetype=&as_qdr=all&as_occt=any&as_dt=i&as_sitesearch=wandersick.blogspot.com" -A "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7) Gecko/20040613 Firefox/0.8.0+" --retry 1 -m 8 -o ChMacUpdate.tmp >nul 2>&1
 	@if !errorlevel! NEQ 0 (
 		REM [translation] An error occured during update check
 		REM [translation] Verify Internet connectivity.
@@ -47,8 +50,8 @@ for %%i in ("ws.chmac.10a" "ws.chmac.11" "ws.chmac.15" "ws.chmac.20" "ws.chmac.2
 		goto :end
 	)
 	REM check if the downloaded page is empty (i.e. actually not downloaded)
-	@for /f "usebackq tokens=* delims=" %%a in (`type cmdDictUpdate.tmp 2^>nul`) do set udContent=%%a >nul 2>&1
-	find /i "did not match any documents" "cmdDictUpdate.tmp" >nul 2>&1
+	@for /f "usebackq tokens=* delims=" %%a in (`type ChMacUpdate.tmp 2^>nul`) do set udContent=%%a >nul 2>&1
+	find /i "did not match any documents" "ChMacUpdate.tmp" >nul 2>&1
 	@if !errorlevel! EQU 0 (
 		set updateFound=false
 	) else (
@@ -70,15 +73,19 @@ if /i "%updateFound%"=="false" (
 	REM [translation] An error occured during update check
 	REM [translation] Verify Internet connectivity.
 	REM [translation] Going back in a few seconds
-	echo.&echo :: !uErr1a%lang%!^^^! !uErr1b%lang%!&echo.&echo :: !uErr1c%lang%!...&((timeout /T 6 >nul 2>&1) || (ping -n 6 -l 2 127.0.0.1 >nul 2>&1))
+	@if /i "%1"=="/ud" echo.&echo :: !uErr1a%lang%!^^^! !uErr1b%lang%!&echo.&echo :: !uErr1c%lang%!...&((timeout /T 6 >nul 2>&1) || (ping -n 6 -l 2 127.0.0.1 >nul 2>&1))
 ) else if /i "%updateFound%"=="true" (
 	REM beep
-	echo 
+	@if /i "%1"=="/ud" echo 
 	REM flashes taskbar
-	start "" "%ChMacDir%\Data\_winflash_wget.exe"
+	@if /i "%1"=="/ud" start "" "%ChMacDir%\Data\_winflash_wget.exe"
 	REM [translation] A new version seems available. Visit
-	call "%ChMacDir%\Data\_choiceYn.bat" ":: !uFoundMsg3%lang%! wandersick.blogspot.com? [Y,N] " N 20
-	@if !errorlevel! EQU 0 start http://wandersick.blogspot.com
+	@if /i "%1"=="/ud" (
+		call "%ChMacDir%\Data\_choiceYn.bat" ":: !uFoundMsg3%lang%! wandersick.blogspot.com? [Y,N] " N 20
+		@if !errorlevel! EQU 0 start http://wandersick.blogspot.com
+	) else (
+		exit /b 222
+	)
 )
 :end
 popd

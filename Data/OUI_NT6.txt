@@ -1,0 +1,14 @@
+Vendor=OUI (This is the OUI list for Windows XP. Add here the OUIs for randomization of [G] 'Generate' function.)
+3Com=020475
+Atheros=021374
+Broadcom=020AF7
+Cisco=020D28
+Intel=020CF1
+Linksys=020E08
+Bigfoot=021903
+Marvell=025043
+NVIDIA=02044B
+Realtek=02E04C
+VIA=02127B
+Unknown=A2A2A2
+Fake=AABBCC
