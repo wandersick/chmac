@@ -1,0 +1,3 @@
+choice.exe may be put here to enhance experience in older Windows. While Windows Server 2003, Vista or later already has choice.exe built-in, it should not be put here. Use the choice.exe from windows resource kit (9x/NT) or Windows 2003.
+
+Files placed here will not take over those that come with system (if they already do).

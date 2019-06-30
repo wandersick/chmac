@@ -1,44 +1,61 @@
 
-                               [ ChMac v1.1 ]
+                             [ ChMac v1.2 ]
 
-             http://wandersick.blogspot.com | wandersick@gmail.com
+          https://wandersick.blogspot.com | wandersick@gmail.com
 
      [ What? ]
 
-  #  ChMac is an easy-to-use portable command-line-interface (CLI) tool that
-     changes MAC addresses of specified network adapters. As a CLI tool, it
-     can be used in any way such as scheduling tasks with 'schtasks' command.
+  #  Named after chmod, chmac is a command-line-interface (CLI) tool for
+     Windows that changes or randomizes MAC addresses of specified network
+     adapters, e.g. for a client device to reuse public Wi-Fi hotspot that
+     has past usage limit for the day.
+
+     An easy-to-use interactive console is available, alongside command-line
+     parameters, e.g. for scheduling jobs with Task Scheduler. ChMac also has
+     support for recurrence built-in.
 
      [ Features ]
 
-  #  An interactive console as well as accepting parameters.
+  #  Change MAC addresses on Windows automatically or manually
 
-  #  Automatically changes MAC addresses on set intervals. This is useful to
-     connect to some free public Wi-Fi hotspots that have a time limit and
-     recognize MAC addresses in order to disallow the same person to use the
-     service again.
+     Automatically change MAC addresses on set intervals. This is useful to
+     reconnect to some free public Wi-Fi hotspots that impose a time limit by
+     recognizing MAC addresses to prevent the same device from reconnecting
+  
+  #  Randomize MAC addresses for better security using public Wi-Fi
 
-  #  Uses DevCon.exe to automate the whole process. ChMac still works without
-     it, but will show the Network Connections folder when finished, so that
-     users can manually disable and re-enable the adapter for new settings to
-     take effect. (On 1st run users are asked to download DevCon to avoid it)
+     Generate new MAC addresses randomly based on a customizable list of
+     organizationally unique identifiers (OUI)
 
-  #  Multilingual interface. (See tip 5)
+  #  Optionally leverages DevCon.exe to simply the process by automatically
+     disabling and re-enabling network interface card (NIC)
 
-  #  Free software. Written in poorly commented Batch. Any codes of anything
-     by me are GPL-licensed. However the 3rdparty component DevCon.exe is not.
-     You may freely adopt it to your free projects.
+     ChMac also works without DevCon by showing the Network Connections
+     folder when finished, so that users can manually disable and re-enable
+     NIC for new settings to take effect
 
-  #  Windows XP or later are fully supported. If you use this in Windows PE
-     or 2000, you may place from a XP machine: msvcp60.dll, getmac.exe,
-     reg.exe in "ChMac\Dict\conf\3rdparty\LP". Admins rights are required.
+     On first launch, users are guided to download DevCon with convenient
+     automatic and manual options
 
-  #  The interactive console is easier to use. Just follow instructions on
-     screen. For command line mode, see the following:
+  #  Restore original MAC address
+
+  #  Error checking + rich return codes for scripting or other possibilities
+
+  #  Free and open-source software written in Windows Batch language
+
+  #  Supports Windows 2000/XP/Vista/7/8/8.1/10 and Server 2000-2019
+
+  #  Easy-to-use interactive console + command-line mode accepting parameters
+
+     Just follow instructions on screen for the interactive console.
+
+     For command-line mode, see the following:
+
+     [ Syntax ]
+
+     chmac.bat [/d dir][/l][/m address][/n id][/r][/help][/?]
 
      [ Parameters ]
-
-  #  ChMac [/d dir][/l][/m address][/n id][/r][/u][/help][/?]
 
      /d dir        :: working directory -- maybe required
                       (MUST be specified before other parameters)
@@ -46,23 +63,24 @@
      /m            :: new mac address to be applied.
      /n            :: adapter to be applied new mac address
                       if /m is unspecified. New mac address will be
-                      randomized (OUI kept) and automatically filled.
+                      randomized (OUI kept) and automatically filled in
      /r            :: restore to original MAC address
      /a            :: auto-change interval
-     /u            :: check for program update
+                      suffix may be s for sec, m for min, h for hour or d for day
+                      e.g. enter '20m' to recur per 20 mins. [X] to reset or exit
 
   #  The mac address format can be any of the following:
 
      AB-CD-EF-12-34-56
      AB:CD:EF:12:34:56
      AB.CD.EF.12.34.56
-     AB CD EF 12 34 56 ... or without any separation in between at all.
+     AB CD EF 12 34 56     :: or without any separation in between at all
 
   #  When no parameter is specified, interactive mode is entered.
 
      [ Examples ]
 
-  #  . chmac /l                     :: list available adapter IDs
+     . chmac /l                     :: list available adapter IDs
      . chmac /n 1                   :: update network adapter #1 with
                                        randomized mac address numbers.
      . chmac /m 00301812AB01 /n 2   :: update network adapter #2 with the
@@ -73,15 +91,58 @@
 
      [ Return codes ]
 
-  #  (0) Success  (1) Failure  (3) NIC error  (4) Bad syntax  (5) No exe
+  #  (0) Success     (1) Failure    (3) NIC error
+     (4) Bad syntax  (5) No exe     (7) No admin rights
+
+     [ Requirements ]
+
+  #  All Windows operating systems from Windows 2000 and up (Windows 10 1809
+     at the moment) are supported.
+
+     - To use this in Windows 2000 or some minimal Windows PE, place these files
+       from another machine which runs English Windows XP or 2003: 'msvcp60.dll'
+       as well as 'getmac.exe' and 'reg.exe' into 'ChMac\Data\3rdparty\LP'
+
+  #  Admin rights are required for editing MAC addresses, disabling and re-
+     enabling network adapters
+
+     - ChMac does not automatically elevate itself if there is no admin rights.
+       Although there is error checking mechanism for being non-admin, it would
+       be better to make sure admin rights are available before executing ChMac
+
+  #  ChMac wraps around DevCon (optional), OS-native and GNU Linux utilities
+
+     All of the below dependencies are optional. Most of them are included
+
+     - DevCon.exe - Optionally enhances ChMac using DevCon, Microsoft Windows
+       Device Console which can be downloaded during first launch of the script
+
+       Beware of the version to download as there are lots of DevCon versions
+       for different OS. See https://superuser.com/a/1099688/112570
+
+     - Unix utilities leveraged by ChMac are included already:
+       tr.exe, sed.exe, which.exe, sleep.exe, wc.exe, wget.exe, grep.exe
+
+     - Other OS built-in dependencies natively in Windows since Windows XP:
+       getmac.exe, reg.exe, msvcp60.dll
+
+     - Optional OS built-in dependency natively in Windows since Windows Vista:
+       choice.exe, falling back to 'set /p' if unavailable, thru a sub-script
+       '_choiceMulti.bat'
 
      [ Limitations ]
 
-  #  1. While it may seem this program is multi-lingual, only English has been
-        implemented for this version.
+     1. Some virtual adapters may be unsupported
 
-     2. Some virtual adapters are unsupported.
+     2. Randomization logic randomizes numbers (0-9) instead of hex (0-9, A-F)
 
-     [ Suggestion ]
+     [ GitHub repository ]
 
-  #  Please drop me a line by email or the web site atop.
+     A more detailed documentation of ChMac is available on GitHub at:
+     https://github.com/wandersick/chmac
+
+     [ Donation ]
+
+     If ChMac or my other utilities help you, consider donating $1 at
+     https://about.me/wandersick which would be encouraging and much appreciated
+     

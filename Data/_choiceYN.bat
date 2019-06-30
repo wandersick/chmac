@@ -1,35 +1,23 @@
-:: Copyright (C)2009-2010 wanderSick ( http://wandersick.blogspot.com/ | wandersick@gmail.com )
-::
-:: ChoiceYN is free software: you can redistribute it and/or modify
-:: it under the terms of the GNU General Public License as published by
-:: the Free Software Foundation, either version 3 of the License, or
-:: (at your option) any later version.
-::
-:: ChoiceYN is distributed in the hope that it will be useful,
-:: but WITHOUT ANY WARRANTY; without even the implied warranty of
-:: MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-:: GNU General Public License for more details.
-::
-:: You should have received a copy of the GNU General Public License
-:: along with ChoiceYN. If not, see <http://www.gnu.org/licenses/>.
-
 :: ------------------------------------------------------------------------
-:: Sub: ChoiceYN
+
+:: Sub-script: _choiceYN.bat
 :: Version: 1.1
 :: Creation Date: 2/11/2009
 :: Last Modified: 20/01/2010
-:: Author: wanderSick@C7PE 
+:: Author: wandersick 
 :: Email: wandersick@gmail.com
-:: Web: wandersick.blogspot.com
+:: Web: https://wandersick.blogspot.com
+:: Github Repo: https://github.com/wandersick/ws-choice
 :: Supported OS: Windows 2000 or later
 
 :: Description: Properly fall back to set /p for systems without choice.exe
 ::              Differentiate choice.exe from Win 9x and 2003/Vista/7
 ::              Set /p also returns errorlevels
 ::              Gives 2 choices, YN; for other choices, use ChoiceMulti
-::              v1.1 adds support of Sed and TR to filter inputs
+::              v1.1 adds support of sed and tr to filter inputs
 
-:: Usage: See /?
+:: For a list of supported parameters, refer to paramter /?
+
 :: ------------------------------------------------------------------------
 
 
@@ -41,7 +29,7 @@ if "%~1"=="/?" (goto help) else if /i "%~1"=="" (goto help) else (goto _choiceYn
 :help
 
 echo.
-echo :: ChoiceYN 1.0 by wanderSick (wanderSick.blogspot.com)
+echo :: _choiceYN.bat by wandersick - https://wandersick.blogspot.com
 echo.
 echo  [Usage]
 echo.
