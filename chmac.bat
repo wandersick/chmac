@@ -1,9 +1,29 @@
-:: ChMac by wanderSick for ECPP
-:: requires devcon.exe, reg.exe and getmac.exe, supports XP or higher
+:: ------------------------------------------------------------------------------
 
-:: devcon.exe has to separately downloaded from Microsoft: http://support.microsoft.com/kb/311272.
+:: Script: ChMac
+:: Filename: chmac.bat
+:: Version: 1.2
+:: Last Modified: 29/06/2019
+:: Creation Date: 24/01/2010
+:: Author: wandersick 
+:: Email: wandersick@gmail.com
+:: Web: https://wandersick.blogspot.com
+:: GitHub Repo: https://github.com/wandersick/chmac
+:: Supported OS: From Windows XP to Windows 10 (limited support for 2000)
 
-:: When there's more than 8 adapters, ChoiceMulti will fall back to Set /P
+:: Description:
+
+::     Naming after chmod, chmac is a command-line-interface ^(CLI^) tool format
+::     Windows that changes MAC addresses of specified network adapters. As a
+::     CLI tool, it can be used in ways such as interactive console, command-
+::     line parameters for scheduling jobs with Task Scheduler, alongside built-
+::     in recurrence capability
+
+::     (Originally part of ECPP, Enhanced Command Prompt Portable)
+
+:: For readme, refer to help paramter /? and /help or above GitHub repository
+
+:: ------------------------------------------------------------------------------
 
 @echo off
 
@@ -17,31 +37,13 @@ setlocal enabledelayedexpansion
 if defined debug echo :: Debugging mode 1 is ON.
 if defined debug2 echo on&set debug=1&echo :: Debugging mode 2 is ON.
 
-:: set whether to check for ChMac update silently
-set mUpdateChMac=Y
+:: set error code to 0
 set mErrCode=0
 set mAutoChangeInterval=None
-set ChMacVersion=1.1
+set ChMacVersion=v1.2
 
 :: if elevated itself
 :: if /i "%1" EQU "/2ndtime" set secondRun=1
-
-
-:: ======================================================== language (auto / manual)
-
-:: auto detect current user language. (so far English/Chinese T/Chinese S)
-:: separate between CHS, CHT and EN. For CHT (1), use "¥Ø¿ý"; for CHS (2), use "Ä¿Â¼".
-
-:: check if lang is defined in ECPP
-if /i "%lang%"=="En" goto :skipLangChk
-if /i "%lang%"=="Cht" goto :skipLangChk
-if /i "%lang%"=="Chs" goto :skipLangChk
-set lang=En
-dir %systemdrive% | find /i "¥Ø¿ý" >nul 2>&1
-if %errorlevel% EQU 0 set lang=Cht
-dir %systemdrive% | find /i "Ä¿Â¼" >nul 2>&1
-if %errorlevel% EQU 0 set lang=Chs
-:skipLangChk
 
 :: OS ver check
 
@@ -56,23 +58,14 @@ del "%temp%\exclMac.tmp" /f /q >nul 2>&1
 
 :: ======================================================== set work directory (see /d) 
 
-:: detect if user ChMac is run by Run As Administrator (ie %CD% would be windir\system32)
-:: correct the working directory to be %~d0%~p0 (i.e. x:\...\Chmac\
-:: so that Run As Administrator would not fail
-:: (cancelled) if /i "%CD%" EQU "%windir%\system32" cd /d %~d0%~p0
-
-:: (cancelled) always cd into the directory of the bat (ie as working directory)
-:: cd /d %~d0%~p0
-
-:: fall back if ECPP is not present
-:: (cancelled) if not defined ChMacDir @if defined ecppDir (set ChMacDir=%ecppDir%\Data\Batch) else (set ChMacDir=%CD%)
+:: Set the ChMacDir working directory where ChMac is by %~d0%~p0 (e.g. x:\...\ChMac)
 set ChMacDir=%~d0%~p0
 
 :: to manually specify work directory
 if /i "%~1"=="/d" (
 	REM check if ChMacDir is correct
 	@if not exist "%~2\Data\_choiceMulti.bat" (
-		set mErrType=Syntax Error: Working directory. ^(/D^)
+		set mErrType=Syntax Error: Working directory ^(/d^)
 		set mErrCode=4
 		goto :error
 	)
@@ -84,17 +77,13 @@ if /i "%~1"=="/d" (
 :: ======================================================== set PATH for some sub-components with no absolute path
 
 :: check if path of subscript folder already set
-echo %path% | find /i "%chmacdir%Data\3rdparty" >nul 2>&1
+echo %path%|find /i "%chmacdir%Data\3rdparty" >nul 2>&1
 
 if %errorlevel% NEQ 0 (
-	REM set path for sub-elements
-	set PATH=%chmacdir%Data;%chmacdir%Data\3rdparty;%chmacdir%Data\3rdparty\i386;%PATH%;%chmacdir%Data\3rdparty\LP
+	REM set path for sub-elements (!PATH! to handle parenthesis cases - https://superuser.com/questions/119610)
+	set PATH=%chmacdir%Data;%chmacdir%Data\3rdparty;!PATH!;%chmacdir%Data\3rdparty\LP
+	
 )
-
-:: ======================================================== TRANSLATION
-
-:: load translations
-call "%chmacdir%Data\_translation.bat"&set mTranslation=1
 
 :: ======================================================== check for executables / rights
 
@@ -105,7 +94,7 @@ if "%errorlevel%"=="9009" set noMore=1
 :: detect if system doesn't support "reg"
 reg >nul 2>&1
 if "%errorlevel%"=="9009" (
-	set mErrType=Error: No reg.exe. Place one from XP in "%chmacdir%Data\3rdparty\LP"
+	set mErrType=Error: No reg.exe. Place one from Windows in "%chmacdir%Data\3rdparty\LP"
 	set mErrCode=5
 	goto :error
 )
@@ -114,19 +103,11 @@ if "%errorlevel%"=="9009" (
 which devcon >nul 2>&1
 if %errorlevel% NEQ 0 set noDevcon=1
 
-:: detect if system doesn't support "attrib"
-:: attrib >nul 2>&1
-:: if "%errorlevel%"=="9009" (
-:: 	set mErrType=Error: No attrib.exe. Place one from XP in "%chmacdir%Data\3rdparty\LP"
-:: 	set mErrCode=5
-:: 	goto :error
-:: )
-
 :: getmac takes a long time to load, cannot check that way
 if not exist "%windir%\system32\getmac.exe" (
 	@if not exist "%chmacdir%Data\3rdparty\getmac.exe" (
 		@if not exist "%chmacdir%Data\3rdparty\LP\getmac.exe" (
-			set mErrType=Error: No getmac.exe. Place one from XP in "%chmacdir%Data\3rdparty\LP"
+			set mErrType=Error: No getmac.exe. Place one from Windows in "%chmacdir%Data\3rdparty\LP"
 			set mErrCode=5
 			goto :error
 		)
@@ -177,10 +158,10 @@ if /i "%~1"=="/m" (
 	set mCmdNewMac=!mCmdNewMac: =!
 	set mCmdNewMac=!mCmdNewMac:.=!
 	REM check for wrong length
-	@for /f "usebackq" %%i in (`echo !mCmdNewMac!^| wc.exe -m`) do (
+	@for /f "usebackq" %%i in (`echo !mCmdNewMac!^|wc.exe -m`) do (
 		@if /i "%%i" NEQ "14" (
 			@if /i "%%i" NEQ "12" (
-				set mErrType=Syntax Error: Wrong address length (^/M^)
+				set mErrType=Syntax Error: Wrong address length (^/m^)
 				set mErrCode=4
 				goto :error
 			)
@@ -189,7 +170,7 @@ if /i "%~1"=="/m" (
 	REM check for non hex
 	echo !mCmdNewMac!| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
 	@if !errorlevel! EQU 0 (
-		set mErrType=Syntax Error: Not hexadecimal ^(/M^)
+		set mErrType=Syntax Error: Not hexadecimal ^(/m^)
 		set mErrCode=4
 		goto :error
 	)
@@ -203,7 +184,7 @@ if /i "%~1"=="/n" (
 	REM check for non digit
 	echo "%~2"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" "[^[:digit:]]" >nul 2>&1
 	@if !errorlevel! EQU 0 (
-		set mErrType=Syntax Error: Not digit ^(/N^)
+		set mErrType=Syntax Error: Not digit ^(/n^)
 		set mErrCode=4
 		goto :error
 	)
@@ -225,7 +206,7 @@ if /i "%~1"=="/a" (
 	REM check for non digit
 	echo "%~2"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
 	@if !errorlevel! NEQ 0 (
-		set mErrType=Syntax Error: Not digit or smhd ^(/A^)
+		set mErrType=Syntax Error: Not digit or smhd ^(/a^)
 		set mErrCode=4
 		goto :error
 	)
@@ -244,19 +225,14 @@ if /i "%~1"=="/l" (
 	goto :ChMac
 )
 
-if /i "%~1"=="/u" (
-	call "%chmacdir%Data\_update2.bat" /ud
-	goto :end
-)
-
 if /i "%~1"=="/d" (
-	set mErrType=Syntax Error: Working directory ^(/D^)
+	set mErrType=Syntax Error: Working directory ^(/d^)
 	set mErrCode=4
 	goto :error
 )
 
 if defined mCmdNewMac @if not defined mCmdAdapterNum (
-	set mErrType=Syntax Error: Missing parameter /N ^(/M^)
+	set mErrType=Syntax Error: Missing parameter /n ^(/m^)
 	set mErrCode=4
 	goto :error
 )
@@ -284,27 +260,28 @@ if "%~1" NEQ "" (
 	goto :error
 )
 
-REM in command line mode title is not shown
-if not defined mCmd title ChMac v1.1 - Download DevCon.exe
+REM in command-line mode title is not shown
+if not defined mCmd title ChMac by wandersick %ChMacVersion% - Download DevCon.exe
 
 if not defined noDevcon goto :MainMenu
 if exist "%chmacdir%Data\skipInit" goto :MainMenu
 :Reminder
 cls
 echo.
-echo :: ChMac can be enhanced with DevCon.exe. Without it ChMac works too,
-echo    but at the end the Network Connections folder will be presented so as
-echo    to manually disable and enable the adapter for changes to take effect.
+echo :: ChMac can be enhanced with DevCon.exe to automatically disable and
+echo    re-enable network interface card ^(NIC^). ChMac works without it too,
+echo    but the Network Connections folder will be presented at the end for
+echo    user to manually disable and enable NIC for changes to take effect.
 echo.
 echo :: Available choices:
 echo.
-echo    1. Download it automatically
+echo    1. Download it automatically ^(For earlier OS only - XP/2003/Vista^)
 echo.
-echo    2. Download it manually ^(Open DevCon web page^)
+echo    2. Download it manually ^(For all OS - open DevCon download page^)
 echo.
-echo    3. Continue and remind me next time
+echo    3. Continue and remind me next time ^(Manually disable/re-enable NIC^)
 echo.
-echo    4. Continue and never remind me again
+echo    4. Continue and never remind me ^(Manually disable/re-enable NIC^)
 echo.
 call "%chmacdir%Data\_choiceMulti.bat" /msg ":: Please choose [1,2,3,4] " /errorlevel 4
 set cmReminderChoice=%errorlevel%
@@ -317,15 +294,16 @@ if %cmReminderChoice% EQU 2 (
 	echo.
 	echo :: A web page will be opened in 5 seconds. Please wait.
 	echo.
-	echo    After the download, run the exe which is a self-extracting
-	echo    archive. Then just click "Unzip". Do NOT modify the path.
+	echo    After the download, store devcon.exe in "ChMac\Data\3rdparty"
 	echo.
 	echo :: Press any key here after the above has been performed.
 	"%chmacdir%Data\3rdparty\sleep.exe" 5
-	start http://support.microsoft.com/kb/311272
+	REM start http://support.microsoft.com/kb/311272
+	start https://superuser.com/a/1099688/112570
 	pause >nul 2>&1
 	@if not exist "%temp%\i386\devcon.exe" (
 		cls
+		:: Beep
 		echo 
 		echo #   Error: devcon.exe not found in "%temp%\i386"
 		echo.
@@ -339,9 +317,11 @@ if %cmReminderChoice% EQU 2 (
 :ReminderOption1
 if %cmReminderChoice% EQU 1 (
 	cls
-	wget http://download.microsoft.com/download/1/1/f/11f7dd10-272d-4cd2-896f-9ce67f3e0240/devcon.exe --output-document=devcon_package.exe >nul 2>&1
+	REM Reference: https://superuser.com/questions/1002950/quick-method-to-install-devcon-exe
+	wget https://web.archive.org/web/20050322060636/http://download.microsoft.com/download/1/1/f/11f7dd10-272d-4cd2-896f-9ce67f3e0240/devcon.exe --output-document=devcon_package.exe >nul 2>&1
 	@if !errorlevel! NEQ 0 (
 		cls
+		:: Beep
 		echo 
 		echo #   Error: Cannot download DevCon.exe
 		echo.
@@ -351,6 +331,7 @@ if %cmReminderChoice% EQU 1 (
 		pause
 		goto :Reminder
 	)
+	:: Beep
 	echo 
 	echo :: Just click "Unzip" and close. Do NOT change the path.
 	echo.
@@ -358,6 +339,7 @@ if %cmReminderChoice% EQU 1 (
 	del devcon_package.exe /f /q >nul 2>&1
 	@if not exist "%temp%\i386\devcon.exe" (
 		cls
+		:: Beep
 		echo 
 		echo #   Error: devcon.exe not found in "%temp%\i386"
 		echo.
@@ -378,8 +360,8 @@ if defined mCmd (set mOperationTypeMsg=Command-line) else (set mTitleConsoleMsg=
 :: menu not implemented
 
 :ChMac
-title ChMac v1.1 %mTitleConsoleMsg%
-:: less is displayed in command line mode than in interactive
+title ChMac by wandersick %ChMacVersion% %mTitleConsoleMsg%
+:: less is displayed in command-line mode than in interactive
 if not defined mCmd (
 	cls
 	set mNumOfAdapters=0
@@ -396,8 +378,8 @@ if not defined mCmd (
 for /f "usebackq tokens=1-4 delims=," %%i in (`getmac /v /nh /fo csv`) do set /a mNumOfAdapters+=1&set mName!mNumOfAdapters!=%%~i&set mAdapter!mNumOfAdapters!=%%~j&set mMac!mNumOfAdapters!=%%~k&set mID!mNumOfAdapters!=%%~l
 
 if %mNumOfAdapters% EQU 0 (
-	set mErrType=Error: No network adapter found.
-	set mErrCode=4
+	set mErrType=Error: No network adapter found
+	set mErrCode=3
 	goto :error
 )
 
@@ -429,9 +411,9 @@ if defined mCmdList (
 ) else if defined mCmdAdapterNum (
 	echo :: Chosen Nic: %mCmdAdapterNum%
 )
-REM if command line mode, skip to mCmdAdapterNum
+REM if command-line mode, skip to mCmdAdapterNum
 if defined mCmd goto :CmdAdapterNum
-REM if not command line mode but mCmdAdapterNum still defined, i.e. returned from sub menu unplugged error, skip directly to the screen after choosing that adapter ID.
+REM if not command-line mode but mCmdAdapterNum still defined, i.e. returned from sub menu unplugged error, skip directly to the screen after choosing that adapter ID.
 if defined mCmdAdapterNum goto :CmdAdapterNum
 REM add a few more options, e.g. Quit
 set /a mNumPlusOne=%mNumOfAdapters%+1
@@ -478,32 +460,12 @@ if %mErrorLevel% EQU %mNumPlusOne% (
 if %mErrorLevel% EQU %mNumPlusTwo% (
   cls
   echo.
-  echo    Thanks for using ChMac v1.1
+  echo    Thanks for using ChMac :^)
+	echo.
+	echo    Support by donating at about.me/wandersick
   echo.
-  sleep 1s >nul 2>&1
+  sleep 2s >nul 2>&1
   cls
-  REM echo    To check for updates, perform "chmac /u".
-  REM echo.
-  REM echo.  
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo.
-  REM echo    2
-  REM sleep 1s >nul 2>&1
-  REM echo.
-  REM echo    1
-  REM sleep 1s >nul 2>&1
   goto :end
 )
 :CmdAdapterNum
@@ -520,11 +482,12 @@ for /l %%i in (%mNumOfAdapters%,-1,1) do (
 if not defined mChosenCorrectly (
 	@if defined mCmd (
 		echo ___________________________________________________________________
-		set mErrType=Error: Adapter ID not available ^(/N^)
+		set mErrType=Error: Adapter ID unavailable ^(/n^)
 		set mErrCode=4
 		goto :error
 	) else (
 		echo ___________________________________________________________________
+		:: Beep
 		echo 
 		echo :: Wrong choice. Please try again.
 		echo.
@@ -545,6 +508,7 @@ if %errorlevel% EQU 0 (
 		goto :error	
 	) else (
 		echo ___________________________________________________________________
+		:: Beep
 		echo 
 		echo :: Error: Adapter in a nonoperational state.
 		echo.
@@ -566,6 +530,7 @@ if %errorlevel% NEQ 0 (
 		goto :error	
 	) else (
 		echo ___________________________________________________________________
+		:: Beep
 		echo 
 		echo :: Error: Adapter unplugged.
 		echo.
@@ -654,7 +619,7 @@ set mNewMac=%mNewMac: =%
 set mNewMac=%mNewMac:.=%
 
 :: check for wrong length
-for /f "usebackq" %%i in (`echo %mNewMac%^| wc.exe -m`) do (
+for /f "usebackq" %%i in (`echo %mNewMac%^|wc.exe -m`) do (
 	@if /i "%%i" NEQ "14" (
 		@if /i "%%i" NEQ "12" (
 			echo ___________________________________________________________________
@@ -747,6 +712,7 @@ echo    %mDeviceId%
 devcon restart %mDeviceId% >nul 2>&1
 if %errorlevel% NEQ 0 (
   echo ___________________________________________________________________
+	:: Beep
   echo 
   echo :: No DevCon.exe. Opening Network Connections folder instead.
   echo.
@@ -766,6 +732,7 @@ if %errorlevel% EQU 0 (
 ) else if defined mRestoreOriginalMac (
 	set mSuccessOrFailure=See 'ipconfig /all'
 ) else (
+	:: Beep
 	set mSuccessOrFailure=Failure&set mErrCode=1&echo 
 )
 
@@ -777,18 +744,6 @@ if defined noDevcon (set mDevconMsg=Manual) else (set mDevconMsg=Auto)
 for /f "usebackq tokens=* delims=" %%i in (`ECHO %mOldMac%^|sed "s/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1-\2-\3-\4-\5-\6/g"`) do set mOldMacFriendly=%%i
 for /f "usebackq tokens=* delims=" %%i in (`ECHO %mNewMac%^|sed "s/\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)/\1-\2-\3-\4-\5-\6/g"`) do set mNewMacFriendly=%%i
 if defined mRestoreOriginalMac set mNewMacFriendly=Restored to original
-
-:: check for update
-if /i "%mAutoChangeInterval%" EQU "None" (
-	@if /i "%mUpdateChMac%"=="Y" (
-		REM without /ud
-		call "%chmacdir%Data\_update2.bat"
-		@if !errorlevel! EQU 222 (
-			echo.
-			echo :: New version has been found - http://wandersick.blogspot.com
-		)
-	)
-)
 
 echo ___________________________________________________________________
 echo.
@@ -834,7 +789,7 @@ if /i "%mAutoChangeInterval%" NEQ "None" (
 :: extra msg for virtual adapter
 if defined mIsVirtualAdapter (set mIsVirtualAdapterMsg=Unsupported virtual adapter.) else (set mIsVirtualAdapterMsg=Try another OUI or restart the adapter.)
 
-title ChMac v1.1 - Please send feedback to http://wandersick.blogspot.com
+title ChMac by wandersick %ChMacVersion%
 if "%mSuccessOrFailure%" EQU "Failure" (
 	echo :: Error: MAC change failed. %mIsVirtualAdapterMsg%
 	echo.
@@ -858,13 +813,16 @@ if %errorlevel% EQU 0 (
 	pause
 )
 if defined noDevcon (
-	REM check again to ensure it has just been downloaded.
-	devcon >nul 2>&1
-	if "!errorlevel!"=="9009" (
-		echo ___________________________________________________________________
-		echo.
-		call "%chmacdir%Data\_choiceYN.bat" ":: DevCon was not available. Download it? [Y,N] " N 60
-		@if !errorlevel! EQU 0 (goto :Reminder)
+	REM only check for DevCon if user has not chosen not to remind again about DevCon
+	@if not exist "%chmacdir%Data\skipInit" (
+		REM check again to ensure it has just been downloaded.
+		devcon >nul 2>&1
+		if "!errorlevel!"=="9009" (
+			echo ___________________________________________________________________
+			echo.
+			call "%chmacdir%Data\_choiceYN.bat" ":: DevCon was not available. Download it? [Y,N] " N 60
+			@if !errorlevel! EQU 0 (goto :Reminder)
+		)
 	)
 )
 set mRerun=1
@@ -948,74 +906,68 @@ goto :EOF
 
 :: ======================================================== HELP DOC
 
-:ChineseHelpNotice
-
-if /i "%lang%" EQU "cht" (
-	goto :HelpCHT
-) else if /i "%lang%" EQU "chs" (
-	goto :HelpCHS
-) else (
-	goto :EOF
-)
-
-:HelpCHT
-echo.
-echo                  ( ¦p±ý¾\Åª¤¤¤å¤¶²Ð¡A½Ð¨ì³Ì³»Åã¥Üªººô­¶ )
-echo.
-goto :EOF
-
-:HelpCHS
-echo.
-echo                  ( ÈçÓûÔÄ¶ÁÖÐÎÄ½éÉÜ£¬Çëµ½×î¶¥ÏÔÊ¾µÄÍøÒ³ )
-echo.
-
-goto :EOF
 
 :help
 echo.
-echo                               [ ChMac v%ChMacVersion% ]
+echo                               [ ChMac %ChMacVersion% ]
 echo.
-echo             http://wandersick.blogspot.com ^| wandersick@gmail.com
+echo             https://wandersick.blogspot.com ^| wandersick@gmail.com
 echo.
 if defined mShortHelp goto :helpSkip1
 echo     [ What? ]
 echo.
-echo  #  ChMac is a portable command-line tool that changes MAC addresses of 
-echo     specified network adapters. As a CLI tool, it can be used in misc ways
-echo     such as using it with Schtasks for scheduling.
+echo  #  Named after chmod, chmac is a command-line-interface ^(CLI^) tool for
+echo     Windows that changes or randomizes MAC addresses of specified network
+echo     adapters, e.g. for a client device to reuse public Wi-Fi hotspot that
+echo     has past usage limit for the day.
+echo.
+echo     An easy-to-use interactive console is available, alongside command-line
+echo     parameters, e.g. for scheduling jobs with Task Scheduler. ChMac also has
+echo     support for recurrence built-in.
 echo.
 echo     [ Features ]
 echo.
-echo  #  Includes an interactive console.
+echo  #  Change MAC addresses on Windows automatically or manually
 echo.
-echo  #  Automatically change MAC addresses on set intervals. This may be useful
-echo     in some free public Wi-Fi Hotspot where trial connections get terminated
-echo     every 20 minutes or so, until the MAC address is renewed.
+echo     Automatically change MAC addresses on set intervals. This is useful to
+echo     reconnect to some free public Wi-Fi hotspots that impose a time limit by
+echo     recogniziung MAC addresses to prevent the same device from reconnecting
 echo.
-echo  #  Uses DevCon.exe to automate the whole process. ChMac still works without
-echo     it, but will show the Network Connections folder when finished, so that
-echo     users can manually disable and re-enable the adapter for new settings to
-echo     take effect. On 1st run users are asked to download DevCon to avoid that.
+echo  #  Randomize MAC addresses for better security using public Wi-Fi
 echo.
-echo  #  New MAC addresses can be randomized from a list of 13476 OUIs.
+echo     Generate new MAC addresses randomly based on a customizable list of
+echo     organizationally unique identifiers ^(OUI^)
 echo.
-echo  #  Multilingual interface. ^(See tip 5^)
+echo  #  Optionally leverages DevCon.exe to simply the process by automatically 
+echo     disabling and re-enabling network interface card ^(NIC^)
 echo.
-echo  #  Free software. Written in poorly commented Batch. Any codes of anything
-echo     by me are GPL-licensed. However the 3rdparty component DevCon.exe is not.
-echo     You may freely adopt it to your free projects.
+echo     ChMac also works without DevCon by showing the Network Connections
+echo     folder when finished, so that users can manually disable and re-enable
+echo     NIC for new settings to take effect
 echo.
-echo  #  Windows XP or later are fully supported. If you use this in Windows PE
-echo     or 2000, you may place from a XP machine: msvcp60.dll, getmac.exe,
-echo     reg.exe in "ChMac\Dict\conf\3rdparty\LP". Admins rights are required.
+echo     On first launch, users are guided to download DevCon with convenient 
+echo     automatic and manual options
 echo.
-echo  #  The interactive console is easier to use. Just follow instructions on
-echo     screen. For command line mode, see the following:
+echo  #  Restore original MAC address
+echo.
+echo  #  Error checking + rich return codes for scripting or other possibilities
+echo.
+echo  #  Free and open-source software written in Windows Batch language
+echo.
+echo  #  Supports Windows 2000/XP/Vista/7/8/8.1/10 and Server 2000-2019
+echo.
+echo  #  Easy-to-use interactive console + command-line mode accepting parameters
+echo.
+echo     Just follow instructions on screen for the interactive console.
+echo.
+echo     For command-line mode, see the following:
 echo.
 :helpSkip1
-echo     [ Parameters ]
+echo     [ Syntax ]
 echo.
-echo  #  ChMac [/d dir][/l][/m address][/n id][/r][/u][/help][/?]
+echo  #  chmac.bat [/d dir][/l][/m address][/n id][/r][/help][/?]
+echo.
+echo     [ Parameters ]
 echo.
 echo     /d       dir  :: working directory -- maybe required
 echo                      ^(MUST be specified before other parameters^)
@@ -1023,54 +975,91 @@ echo     /l            :: list network adapters and their IDs
 echo     /m            :: new mac address to be applied.
 echo     /n            :: adapter to be applied new mac address
 echo                      if /m is unspecified. New mac address will be
-echo                      randomized ^(OUI kept^) and automatically filled.
+echo                      randomized ^(OUI kept^) and automatically filled in
 echo     /r            :: restore to original MAC address
 echo     /a            :: auto-change interval
-echo     /u            :: check for program update ^(by default program checks
-echo                      for update silently - can be turned off in conf^)
+echo                      suffix may be s for sec, m for min, h for hour or d for day
+echo                      e.g. enter '20m' to recur per 20 mins. [X] to reset or exit
 echo.
 echo  #  The mac address format can be any of the following:
 echo.
 echo     AB-CD-EF-12-34-56
 echo     AB:CD:EF:12:34:56
 echo     AB.CD.EF.12.34.56
-echo     AB CD EF 12 34 56 ... or without any separation in between at all.
+echo     AB CD EF 12 34 56     :: or without any separation in between at all
 echo.
 echo  #  When no parameter is specified, interactive mode is entered.
 echo.
 echo     [ Examples ]
 echo.
-echo  #  . chmac /l                     :: list available adapter IDs
+echo     . chmac /l                     :: list available adapter IDs
 echo     . chmac /n 1                   :: update network adapter #1 with
-echo                                       randomized mac address numbers.
+echo                                       randomized mac address numbers
 echo     . chmac /m 00301812AB01 /n 2   :: update network adapter #2 with the
 echo                                       new mac address: 00-30-18-12-AB-01
 echo     . chmac /n 3 /r                :: restore adapter 3 to its original MAC
 echo     . chmac /n 4 /a 20m            :: auto-change MAC per 20 minute
-echo     . chmac /?                     :: shows short help. [/help] for long.
+echo     . chmac /?                     :: shows short help. [/help] for long
 echo.
 echo     [ Return codes ]
 echo.
-echo  #  ^(0^) Success  ^(1^) Failure  ^(3^) NIC error  ^(4^) Bad syntax  ^(5^) No exe
+echo  #  ^(0^) Success     ^(1^) Failure    ^(3^) NIC errorlevel
+echo     ^(4^) Bad syntax  ^(5^) No exe     ^(7^) No admin rights
 echo.
 if defined mShortHelp (
-	echo  #  For full documentation, try "chmac /help"
+	echo  #  This is the simplified doc. For the full doc, try "chmac /help"
 	set mShortHelp=
 	set mHelp=
-	call :ChineseHelpNotice
 	goto :end
 )
+echo     [ Requirements ]
+echo.
+echo  #  All Windows operating systems from Windows 2000 and up ^(Windows 10 1809
+echo     at the moment^) are supported.
+echo.
+echo     - To use this in Windows 2000 or some minimal Windows PE, place these files
+echo       from another machine which runs English Windows XP or 2003: 'msvcp60.dll'
+echo       as well as 'getmac.exe' and 'reg.exe' into 'ChMac\Data\3rdparty\LP'
+echo.
+echo  #  Admin rights are required for editing MAC addresses, disabling and re-
+echo     enabling network adapters
+echo.
+echo     - ChMac does not automatically elevate itself if there is no admin rights.
+echo       Although there is error checking mechanism for being non-admin, it would
+echo       be better to make sure admin rights are available before executing ChMac
+echo.
+echo    #  ChMac wraps around DevCon ^(optional^), OS-native and GNU Linux utilities
+echo.
+echo       All of the below dependencies are optional. Most of them are included
+echo.
+echo     - DevCon.exe - Optionally enhances ChMac using DevCon, Microsoft Windows
+echo       Device Console which can be downloaded during first launch of the script
+echo.
+echo     - Unix utilities leveraged by ChMac are included already:
+echo       tr.exe, sed.exe, which.exe, sleep.exe, wc.exe, wget.exe, grep.exe
+echo.
+echo     - Other OS built-in dependencies natively in Windows since Windows XP:
+echo       getmac.exe, reg.exe, msvcp60.dll
+echo.
+echo     - Optional OS built-in dependency natively in Windows since Windows Vista:
+echo       choice.exe, falling back to 'set /p' if unavailable, thru a sub-script
+echo       '_choiceMulti.bat' - https://github.com/wandersick/ws-choice
+echo.
 echo     [ Limitations ]
 echo.
-echo  #  1. While it may seem this program is multi-lingual, only English has been
-echo        implemented for this version.
+echo     1. Some virtual adapters are unsupported
 echo.
-echo     2. Some virtual adapters are unsupported.
+echo     2. Randomization logic randomizes numbers ^(0-9^) instead of hex ^(0-9, A-F^)
 echo.
-echo     [ Suggestion? ]
+echo     [ GitHub repository ]
 echo.
-echo  #  Please drop me a line by email or the web site atop.
-call :ChineseHelpNotice
+echo     A more detailed documentation of ChMac is available on GitHub at:
+echo     https://github.com/wandersick/chmac
+echo.
+echo     [ Donation ]
+echo.
+echo     If ChMac helps you, consider donating $1 at https://about.me/wandersick
+echo     which would be encouraging and much appreciated
 set mHelp=
 goto :end
 

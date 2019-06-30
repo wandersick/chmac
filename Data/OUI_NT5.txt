@@ -1,4 +1,4 @@
-Vendor=OUI (This is the OUI list for Windows Vista/7/8. Add here the OUIs for randomization of [G] 'Generate' function. Not all OUIs work--Begin with 02 for a higher success rate on Windows Vista or later. See: http://blog.technitium.com/2011/05/tmac-issue-with-wireless-network.html)
+Vendor=OUI (This is the OUI list for Windows 2000/XP/2003. Add here the OUIs for randomization of [G] 'Generate' function.)
 3Com=020475
 Atheros=021374
 Broadcom=020AF7
@@ -10,5 +10,3 @@ Marvell=025043
 NVIDIA=02044B
 Realtek=02E04C
 VIA=02127B
-Unknown=A2A2A2
-Fake=AABBCC
