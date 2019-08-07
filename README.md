@@ -1,6 +1,6 @@
 # ChMac - Windows Command to Change MAC Addresses of Network Adapters (chmac.bat)
 
-Named after chmod, `chmac` is a command-line-interface (CLI) tool for Windows that changes or randomizes MAC addresses of specified network adapters, e.g. for a client device to reuse public Wi-Fi hotspot that has exceeded usage limit for the day, or to enhance security.
+Named after getmac and chmod, `chmac` is a command-line-interface (CLI) tool for Windows that changes or randomizes MAC addresses of specified network adapters, e.g. for a client device to reuse public Wi-Fi hotspot that has exceeded usage limit for the day (e.g. hotels, restaurants), or to enhance security.
 
 An easy-to-use interactive console is available, alongside command-line parameters, e.g. for scheduling jobs with Task Scheduler. ChMac also has built-in support for recurrence.
 
