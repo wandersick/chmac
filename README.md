@@ -6,8 +6,6 @@ An easy-to-use interactive console is available, alongside command-line paramete
 
 ![ChMac in Action](./Images/chmac-animated-demo.gif)
 
-For download of the latest version, visit its [page at Microsoft TechNet Gallery](https://gallery.technet.microsoft.com/ChMac-a-quick-Windows-CLI-dcfdb3f7).
-
 For a quick start, refer to [Examples](#Examples) section; for screenshots, refer to [Screenshots](#Screenshots) section
 
 ## List of Features
