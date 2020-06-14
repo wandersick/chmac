@@ -2,14 +2,14 @@
 
 :: Script: ChMac
 :: Filename: chmac.bat
-:: Version: 1.2
-:: Last Modified: 29/06/2019
+:: Version: 1.3
+:: Last Modified: 14/06/2020
 :: Creation Date: 24/01/2010
 :: Author: wandersick 
 :: Email: wandersick@gmail.com
-:: Web: https://wandersick.blogspot.com
+:: Web: https://tech.wandersick.com
 :: GitHub Repo: https://github.com/wandersick/chmac
-:: Supported OS: From Windows XP to Windows 10 (limited support for 2000)
+:: Supported OS: From Windows XP to Windows 10 (limited support for Windows 2000)
 
 :: Description:
 
@@ -40,7 +40,7 @@ if defined debug2 echo on&set debug=1&echo :: Debugging mode 2 is ON.
 :: set error code to 0
 set mErrCode=0
 set mAutoChangeInterval=None
-set ChMacVersion=v1.2
+set ChMacVersion=v1.3
 
 :: if elevated itself
 :: if /i "%1" EQU "/2ndtime" set secondRun=1
@@ -128,22 +128,52 @@ if /i "%~1"=="/help" (
 )
 
 
-:: detect for admin rights (it's fine without admin rights with UAC as devcon can elevate itself -- unless UAC is disabled)
+:: UAC check
+reg query HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA | find /i "0x1"
+if %errorlevel% EQU 0 set UACenabled=1
+
+:: detect if system has WSH disabled unsigned scripts
+:: if useWINSAFER = 1, the TrustPolicy below is ignored and use SRP for this option instead. So check if = 0.
+:: if TrustPolicy = 0, allow both signed and unsigned; if = 1, warn on unsigned; if = 2, disallow unsigned.
+for /f "usebackq tokens=3 skip=2" %%a in (`reg query "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v UseWINSAFER 2^>nul`) do (
+	@if "%%a" EQU "0" (
+		@for /f "usebackq tokens=3 skip=2" %%i in (`reg query "HKLM\SOFTWARE\Microsoft\Windows Script Host\Settings" /v TrustPolicy 2^>nul`) do (
+			@if "%%i" GEQ "2" (
+				set noWSH=1
+			)
+		)
+	)
+)
+
+if defined noWSH (
+	echo.
+	echo #  ERROR: Windows Scripting Host is disabled.
+	echo.
+	pause
+	goto :EOF
+)
+
+:: detect if system supports "attrib"
+attrib >nul 2>&1
+if "%errorlevel%"=="9009" set noAttrib=1
+
+:: detect admin rights
+if defined noAttrib goto :skipAdminCheck
 attrib -h "%windir%\system32" | find /i "system32" >nul 2>&1
 if %errorlevel% EQU 0 (
-	set noAdmin=1
+	if "%UACenabled%" EQU "1" (
+		REM only when UAC is enabled can this script be elevated. Otherwise, non-stop prompting will occur.
+		cscript //NoLogo ".\Data\_elevate.vbs" "%CD%\" "%CD%\chmac.bat" >nul 2>&1
+		goto :EOF
+	) else (
+		echo.
+		echo ** WARNING: Script running without admin rights. Cannot continue.
+		echo.
+		pause
+		goto :EOF
+	)
 )
-
-if defined ECPP set noAdminEcppMsg= Run RA from ECPP first.
-if defined noAdmin (
-	set mErrType=Error: No admin right. Please run as admin.%noAdminEcppMsg%
-	set mErrCode=7
-	goto :error
-)
-
-:: elevate as admin or output error, unless its already been elevated 1 time
-:: if defined noAdmin @if not defined secondRun ("%ecppDir%\Data\Batch\3rdparty\HP\elevate.cmd" "%comspec%" /c start "" /D "%ecppDir%\data\batch\tasks\ChMac\" "ChMac.bat" /2ndtime) else (echo.&echo :: Sorry. Admin rights are required.&echo.&pause&exit)
-:: (cancelled because devcon.exe wouldn't be in path)
+:skipAdminCheck
 
 :: ======================================================== parameter and input check
 
@@ -462,7 +492,7 @@ if %mErrorLevel% EQU %mNumPlusTwo% (
   echo.
   echo    Thanks for using ChMac :^)
 	echo.
-	echo    Support by donating at about.me/wandersick
+	echo    Support by buying coffee at about.me/wandersick
   echo.
   sleep 2s >nul 2>&1
   cls
@@ -1056,10 +1086,10 @@ echo.
 echo     A more detailed documentation of ChMac is available on GitHub at:
 echo     https://github.com/wandersick/chmac
 echo.
-echo     [ Donation ]
+echo     [ Buy a Coffee ]
 echo.
-echo     If ChMac helps you, consider donating $1 at https://about.me/wandersick
-echo     which would be encouraging and much appreciated
+echo     If ChMac or my other utilities help you, consider buying a cup of coffee at 
+echo     https://tinyurl.com/buy-coffee which would be appreciated :^)
 set mHelp=
 goto :end
 

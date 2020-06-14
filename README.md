@@ -211,7 +211,7 @@ All Windows operating systems from Windows 2000 and up (Windows 10 1809 at the m
 
 Admin rights are required for editing MAC addresses, disabling and re-enabling network adapters.
 
-- ChMac does not automatically elevate itself if there is no admin rights. Although there is error checking mechanism for being non-admin, it would be better to make sure admin rights are available before executing ChMac
+- Since version 1.3, ChMac automatically elevates itself if there is no admin rights when User Account Control (UAC) is enabled in the system
 
 ### Dependencies
 
@@ -301,8 +301,9 @@ Return code: 7
 
 ## Release History
 
-| Ver | Date | Changes | MD5 |
-| --- | --- | --- | --- |
-| 1.2 | 20190629 | - Improve compatibility on Windows 10 by changing binaries of GNU Linux utilities<br>- Handle cases when the system PATH variable contains parenthesis  | 28d0f84846ee5a0c1aa0e0b25c6a3381 |
-| 1.1 | 20120916 | Interim release | |
-| 1.0 | 20100124 | First released in 2010 | |
+| Ver | Date | Changes |
+| --- | --- | --- |
+| 1.3 | 20200614 | - Elevate as administrator as needed when User Account Control (UAC) is enabled in the system |
+| 1.2 | 20190629 | - Improve compatibility on Windows 10 by changing binaries of GNU Linux utilities<br>- Handle cases when the system PATH variable contains parenthesis  |
+| 1.1 | 20120916 | Interim release |
+| 1.0 | 20100124 | First released in 2010 |

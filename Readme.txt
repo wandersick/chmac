@@ -1,5 +1,5 @@
 
-                             [ ChMac v1.2 ]
+                             [ ChMac v1.3 ]
 
           https://wandersick.blogspot.com | wandersick@gmail.com
 
@@ -106,9 +106,8 @@
   #  Admin rights are required for editing MAC addresses, disabling and re-
      enabling network adapters
 
-     - ChMac does not automatically elevate itself if there is no admin rights.
-       Although there is error checking mechanism for being non-admin, it would
-       be better to make sure admin rights are available before executing ChMac
+     - Since version 1.3, ChMac automatically elevates itself if there is no
+       admin rights when User Account Control (UAC) is enabled in the system
 
   #  ChMac wraps around DevCon (optional), OS-native and GNU Linux utilities
 
@@ -143,6 +142,6 @@
 
      [ Donation ]
 
-     If ChMac or my other utilities help you, consider donating $1 at
-     https://about.me/wandersick which would be encouraging and much appreciated
+     If ChMac or my other utilities help you, consider buying a cup of coffee
+     at https://tinyurl.com/buy-coffee which would be appreciated :)
      
