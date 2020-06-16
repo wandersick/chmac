@@ -303,6 +303,7 @@ Return code: 7
 
 | Ver | Date | Changes |
 | --- | --- | --- |
+| TBC | 20200616 | - Wrap exclamation marks around ChMacDir variable to handle parentheses<br>- Fix a bug where ChMac (Command Prompt) does not totally exit at the end<br>- Improve UAC elevation mechanism so that it supports Run prompt |
 | 1.3 | 20200614 | - Elevate as administrator as needed when User Account Control (UAC) is enabled in the system |
 | 1.2 | 20190629 | - Improve compatibility on Windows 10 by changing binaries of GNU Linux utilities<br>- Handle cases when the system PATH variable contains parenthesis  |
 | 1.1 | 20120916 | Interim release |

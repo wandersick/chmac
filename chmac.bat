@@ -76,12 +76,12 @@ if /i "%~1"=="/d" (
 
 :: ======================================================== set PATH for some sub-components with no absolute path
 
-:: check if path of subscript folder already set
-echo %path%|find /i "%chmacdir%Data\3rdparty" >nul 2>&1
+:: check if path of subscript folder already set - !ChMacDir! to handle parenthesis cases, e.g. C:\Program Fiels (x86)\...
+echo %path%|find /i "!ChMacDir!Data\3rdparty" >nul 2>&1
 
 if %errorlevel% NEQ 0 (
-	REM set path for sub-elements (!PATH! to handle parenthesis cases - https://superuser.com/questions/119610)
-	set PATH=%chmacdir%Data;%chmacdir%Data\3rdparty;!PATH!;%chmacdir%Data\3rdparty\LP
+	REM set path for sub-elements - !PATH! to handle parenthesis cases - https://superuser.com/questions/119610
+	set PATH=!ChMacDir!Data;!ChMacDir!Data\3rdparty;!PATH!;!ChMacDir!Data\3rdparty\LP
 	
 )
 
@@ -94,7 +94,7 @@ if "%errorlevel%"=="9009" set noMore=1
 :: detect if system doesn't support "reg"
 reg >nul 2>&1
 if "%errorlevel%"=="9009" (
-	set mErrType=Error: No reg.exe. Place one from Windows in "%chmacdir%Data\3rdparty\LP"
+	set mErrType=Error: No reg.exe. Place one from Windows in "!ChMacDir!Data\3rdparty\LP"
 	set mErrCode=5
 	goto :error
 )
@@ -105,9 +105,9 @@ if %errorlevel% NEQ 0 set noDevcon=1
 
 :: getmac takes a long time to load, cannot check that way
 if not exist "%windir%\system32\getmac.exe" (
-	@if not exist "%chmacdir%Data\3rdparty\getmac.exe" (
-		@if not exist "%chmacdir%Data\3rdparty\LP\getmac.exe" (
-			set mErrType=Error: No getmac.exe. Place one from Windows in "%chmacdir%Data\3rdparty\LP"
+	@if not exist "!ChMacDir!Data\3rdparty\getmac.exe" (
+		@if not exist "!ChMacDir!Data\3rdparty\LP\getmac.exe" (
+			set mErrType=Error: No getmac.exe. Place one from Windows in "!ChMacDir!Data\3rdparty\LP"
 			set mErrCode=5
 			goto :error
 		)
@@ -163,7 +163,7 @@ attrib -h "%windir%\system32" | find /i "system32" >nul 2>&1
 if %errorlevel% EQU 0 (
 	if "%UACenabled%" EQU "1" (
 		REM only when UAC is enabled can this script be elevated. Otherwise, non-stop prompting will occur.
-		cscript //NoLogo "%chmacdir%Data\_elevate.vbs" "%chmacdir%" "%chmacdir%\chmac.bat" >nul 2>&1
+		cscript //NoLogo "!ChMacDir!Data\_elevate.vbs" "!ChMacDir!" "!ChMacDir!\chmac.bat" >nul 2>&1
 		goto :EOF
 	) else (
 		echo.
@@ -198,7 +198,7 @@ if /i "%~1"=="/m" (
 		)
 	)
 	REM check for non hex
-	echo !mCmdNewMac!| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
+	echo !mCmdNewMac!| "!ChMacDir!Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
 	@if !errorlevel! EQU 0 (
 		set mErrType=Syntax Error: Not hexadecimal ^(/m^)
 		set mErrCode=4
@@ -212,7 +212,7 @@ if /i "%~1"=="/m" (
 
 if /i "%~1"=="/n" (
 	REM check for non digit
-	echo "%~2"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" "[^[:digit:]]" >nul 2>&1
+	echo "%~2"|"!ChMacDir!Data\3rdparty\tr.exe" -d "\042"|"!ChMacDir!Data\3rdparty\grep.exe" "[^[:digit:]]" >nul 2>&1
 	@if !errorlevel! EQU 0 (
 		set mErrType=Syntax Error: Not digit ^(/n^)
 		set mErrCode=4
@@ -234,7 +234,7 @@ if /i "%~1"=="/r" (
 
 if /i "%~1"=="/a" (
 	REM check for non digit
-	echo "%~2"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
+	echo "%~2"|"!ChMacDir!Data\3rdparty\tr.exe" -d "\042"|"!ChMacDir!Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
 	@if !errorlevel! NEQ 0 (
 		set mErrType=Syntax Error: Not digit or smhd ^(/a^)
 		set mErrCode=4
@@ -242,7 +242,7 @@ if /i "%~1"=="/a" (
 	)
 	set mAutoChangeInterval=%~2
 	REM convert to lowercase since sleep.exe doesn't accept uppercase
-	@for /f "usebackq tokens=* delims=" %%i in (`echo !mAutoChangeInterval!^|"%chmacdir%Data\3rdparty\tr.exe" "[:upper:]" "[:lower:]"`) do set mAutoChangeInterval=%%i
+	@for /f "usebackq tokens=* delims=" %%i in (`echo !mAutoChangeInterval!^|"!ChMacDir!Data\3rdparty\tr.exe" "[:upper:]" "[:lower:]"`) do set mAutoChangeInterval=%%i
 	set mCmd=1
 	shift
 	shift
@@ -268,7 +268,7 @@ if defined mCmdNewMac @if not defined mCmdAdapterNum (
 )
 
 REM check for -
-echo "%~1"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^-" >nul 2>&1
+echo "%~1"|"!ChMacDir!Data\3rdparty\tr.exe" -d "\042"|"!ChMacDir!Data\3rdparty\grep.exe" -i  "^-" >nul 2>&1
 @if %errorlevel% EQU 0 (
 	set mErrType=Syntax Error: Please use "/" instead of '-'
 	set mErrCode=4
@@ -276,7 +276,7 @@ echo "%~1"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\g
 )
 
 REM check for any left wrong parameter
-:: echo "%~1"|"%chmacdir%Data\3rdparty\tr.exe" -d "\042"|"%chmacdir%Data\3rdparty\grep.exe" -i  "^/" >nul 2>&1
+:: echo "%~1"|"!ChMacDir!Data\3rdparty\tr.exe" -d "\042"|"!ChMacDir!Data\3rdparty\grep.exe" -i  "^/" >nul 2>&1
 :: @if %errorlevel% EQU 0 (
 :: 	set mErrType=Syntax Error: Unknown parameter
 :: 	set mErrCode=4
@@ -294,7 +294,7 @@ REM in command-line mode title is not shown
 if not defined mCmd title ChMac by wandersick %ChMacVersion% - Download DevCon.exe
 
 if not defined noDevcon goto :MainMenu
-if exist "%chmacdir%Data\skipInit" goto :MainMenu
+if exist "!ChMacDir!Data\skipInit" goto :MainMenu
 :Reminder
 cls
 echo.
@@ -313,11 +313,11 @@ echo    3. Continue and remind me next time ^(Manually disable/re-enable NIC^)
 echo.
 echo    4. Continue and never remind me ^(Manually disable/re-enable NIC^)
 echo.
-call "%chmacdir%Data\_choiceMulti.bat" /msg ":: Please choose [1,2,3,4] " /errorlevel 4
+call "!ChMacDir!Data\_choiceMulti.bat" /msg ":: Please choose [1,2,3,4] " /errorlevel 4
 set cmReminderChoice=%errorlevel%
 echo.
-if %cmReminderChoice% EQU 4 (echo skipInit>"%chmacdir%Data\skipInit")&goto :MainMenu
-if %cmReminderChoice% EQU 3 (del "%chmacdir%Data\skipInit" /f /q >nul 2>&1)&goto :MainMenu
+if %cmReminderChoice% EQU 4 (echo skipInit>"!ChMacDir!Data\skipInit")&goto :MainMenu
+if %cmReminderChoice% EQU 3 (del "!ChMacDir!Data\skipInit" /f /q >nul 2>&1)&goto :MainMenu
 :ReminderOption2
 if %cmReminderChoice% EQU 2 (
 	cls
@@ -327,7 +327,7 @@ if %cmReminderChoice% EQU 2 (
 	echo    After the download, store devcon.exe in "ChMac\Data\3rdparty"
 	echo.
 	echo :: Press any key here after the above has been performed.
-	"%chmacdir%Data\3rdparty\sleep.exe" 5
+	"!ChMacDir!Data\3rdparty\sleep.exe" 5
 	REM start http://support.microsoft.com/kb/311272
 	start https://superuser.com/a/1099688/112570
 	pause >nul 2>&1
@@ -378,8 +378,8 @@ if %cmReminderChoice% EQU 1 (
 		pause
 		goto :ReminderOption1
 	)
-	copy "%temp%\i386\devcon.exe" "%chmacdir%Data\3rdparty\devcon.exe" /y >nul 2>&1
-	copy "%temp%\EULA.txt" "%chmacdir%Data\3rdparty\devcon-EULA.txt" /y >nul 2>&1
+	copy "%temp%\i386\devcon.exe" "!ChMacDir!Data\3rdparty\devcon.exe" /y >nul 2>&1
+	copy "%temp%\EULA.txt" "!ChMacDir!Data\3rdparty\devcon-EULA.txt" /y >nul 2>&1
 	goto :MainMenu
 )
 goto :Reminder
@@ -456,7 +456,7 @@ echo    %mNumPlusTwo%. Exit
 echo.
 :: check if there are more than 8 adapters (including the Quit, then 9)
 if not %mNumOfAdapters% GEQ 9 (
-  call "%chmacdir%Data\_choiceMulti.bat" /msg ":: Please make a choice [%mNumofAdapterChoice%] " /errorlevel %mNumPlusTwo%
+  call "!ChMacDir!Data\_choiceMulti.bat" /msg ":: Please make a choice [%mNumofAdapterChoice%] " /errorlevel %mNumPlusTwo%
 ) else (
   set /p mErrorLevel=:: Please make a choice [%mNumofAdapterChoice%] 
 )
@@ -480,10 +480,10 @@ if %mErrorLevel% EQU %mNumPlusOne% (
 	REM check if interval is reset
 	if /i "!mAutoChangeInterval!"=="x" set mAutoChangeInterval=None&set mRerun=1&goto :ChMacLoaded
 	REM check if not only digit
-	echo !mAutoChangeInterval!|"%chmacdir%Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
+	echo !mAutoChangeInterval!|"!ChMacDir!Data\3rdparty\grep.exe" -i  "^[0-9]*[smhd]$" >nul 2>&1
 	@if !errorlevel! NEQ 0 goto :DefineInterval
 	REM convert to lowercase since sleep.exe doesn't accept uppercase
-	@for /f "usebackq tokens=* delims=" %%i in (`echo !mAutoChangeInterval!^|"%chmacdir%Data\3rdparty\tr.exe" "[:upper:]" "[:lower:]"`) do set mAutoChangeInterval=%%i
+	@for /f "usebackq tokens=* delims=" %%i in (`echo !mAutoChangeInterval!^|"!ChMacDir!Data\3rdparty\tr.exe" "[:upper:]" "[:lower:]"`) do set mAutoChangeInterval=%%i
 	set mRerun=1
 	goto :ChMacLoaded
 )
@@ -529,7 +529,7 @@ if not defined mChosenCorrectly (
 
 
 :: detect if chosen adapter is non-operational -- check MAC address field for non hex/-
-echo !mMac%mChosenAdapterNum%!| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]-]" >nul 2>&1
+echo !mMac%mChosenAdapterNum%!| "!ChMacDir!Data\3rdparty\grep.exe" "[^[:xdigit:]-]" >nul 2>&1
 if %errorlevel% EQU 0 (
 	@if defined mCmd (
 		echo ___________________________________________________________________
@@ -542,7 +542,7 @@ if %errorlevel% EQU 0 (
 		echo 
 		echo :: Error: Adapter in a nonoperational state.
 		echo.
-		call "%chmacdir%Data\_choiceYN.bat" ":: Start Device Manager for debugging? [Y,N] " N 60
+		call "!ChMacDir!Data\_choiceYN.bat" ":: Start Device Manager for debugging? [Y,N] " N 60
 		@if %errorlevel% EQU 0 devmgmt.msc
 		set mRerun=1
 		goto :ChMac
@@ -626,7 +626,7 @@ set /p mNewMac=:: [A] Accept  [G] Gen  [O] OUI  [R] Reset  [X] Exit  or type MAC
 if "%mNewMac%"=="" goto :InputMac
 if /i "%mNewMac%" EQU "X" set mRerun=1&goto :ChMacLoaded
 if /i "%mNewMac%" EQU "G" goto :randomize
-if /i "%mNewMac%" EQU "O" start "" notepad "%chmacdir%Data\OUI_NT6.txt"&start "" notepad "%chmacdir%Data\OUI_NT5.txt"&goto :InputMac
+if /i "%mNewMac%" EQU "O" start "" notepad "!ChMacDir!Data\OUI_NT6.txt"&start "" notepad "!ChMacDir!Data\OUI_NT5.txt"&goto :InputMac
 if /i "%mNewMac%" EQU "A" set mNewMac=%mNewRanMac%
 if /i "%mNewMac%" EQU "R" (
 	set mRestoreOriginalMac=1
@@ -662,7 +662,7 @@ for /f "usebackq" %%i in (`echo %mNewMac%^|wc.exe -m`) do (
 )
 
 :: check for non hex
-echo %mNewMac%| "%chmacdir%Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
+echo %mNewMac%| "!ChMacDir!Data\3rdparty\grep.exe" "[^[:xdigit:]]" >nul 2>&1
 if %errorlevel% EQU 0 (
 	echo ___________________________________________________________________
 	echo.
@@ -680,7 +680,7 @@ for /f "usebackq tokens=* delims=" %%i in (`ECHO %mNewMac%^|sed "s/\(..\)\(..\)\
 echo.
 echo :: Please confirm, your new MAC address is %mNewMacFriendly%
 echo.
-call "%chmacdir%Data\_choiceYN.bat" ":: Are you sure to apply it? [Y,N] " N 60
+call "!ChMacDir!Data\_choiceYN.bat" ":: Are you sure to apply it? [Y,N] " N 60
 echo ___________________________________________________________________
 if %errorlevel% NEQ 0 (
   REM reset the mNewMac variable
@@ -756,7 +756,7 @@ if %errorlevel% NEQ 0 (
 )
 
 ipconfig /all > "%temp%\ipConfigAll.tmp"
-"%chmacdir%Data\3rdparty\sed.exe" "s/[^[:xdigit:]]//g" < "%temp%\ipConfigAll.tmp" | find /i "%mNewMac%" >nul 2>&1
+"!ChMacDir!Data\3rdparty\sed.exe" "s/[^[:xdigit:]]//g" < "%temp%\ipConfigAll.tmp" | find /i "%mNewMac%" >nul 2>&1
 if %errorlevel% EQU 0 (
 	set mSuccessOrFailure=Success&set mErrCode=0
 ) else if defined mRestoreOriginalMac (
@@ -830,7 +830,7 @@ if "%mSuccessOrFailure%" EQU "Failure" (
 
 if defined mCmd goto :end
 set mNewMac=
-call "%chmacdir%Data\_choiceYN.bat" ":: Run 'ipconfig /all' to verify new address? [Y,N] " N 60
+call "!ChMacDir!Data\_choiceYN.bat" ":: Run 'ipconfig /all' to verify new address? [Y,N] " N 60
 if %errorlevel% EQU 0 (
 	echo ___________________________________________________________________
 	echo.
@@ -844,13 +844,13 @@ if %errorlevel% EQU 0 (
 )
 if defined noDevcon (
 	REM only check for DevCon if user has not chosen not to remind again about DevCon
-	@if not exist "%chmacdir%Data\skipInit" (
+	@if not exist "!ChMacDir!Data\skipInit" (
 		REM check again to ensure it has just been downloaded.
 		devcon >nul 2>&1
 		if "!errorlevel!"=="9009" (
 			echo ___________________________________________________________________
 			echo.
-			call "%chmacdir%Data\_choiceYN.bat" ":: DevCon was not available. Download it? [Y,N] " N 60
+			call "!ChMacDir!Data\_choiceYN.bat" ":: DevCon was not available. Download it? [Y,N] " N 60
 			@if !errorlevel! EQU 0 (goto :Reminder)
 		)
 	)
@@ -874,7 +874,7 @@ set /a mAutoChangeTries+=1
 echo :: Auto-change interval set. Waiting: %mAutoChangeInterval% ^(Try: %mAutoChangeTries%^)
 echo.
 echo :: To stop, press [CTRL+C] or close this.
-"%chmacdir%Data\3rdparty\sleep.exe" %mAutoChangeInterval%
+"!ChMacDir!Data\3rdparty\sleep.exe" %mAutoChangeInterval%
 :: update old mac value for display at next summary
 set mOldMac=%mNewMac%
 goto :apply
@@ -902,14 +902,14 @@ if /i "%mRandomSkipNum%"==" skip=000" (
 )
 
 if OSver GTR 5.2 (
-	if exist "%chmacdir%Data\OUI_NT6.txt" (
-		@for /f "delims== tokens=1,2 usebackq%mRandomSkipNum%" %%i in ("%chmacdir%Data\OUI_NT6.txt") do set mOuiVendor=%%i&set mOuiAlt=%%j&set mNewRanMac=!mOuiAlt!%mNic%&goto :exitRanOuiLoop
+	if exist "!ChMacDir!Data\OUI_NT6.txt" (
+		@for /f "delims== tokens=1,2 usebackq%mRandomSkipNum%" %%i in ("!ChMacDir!Data\OUI_NT6.txt") do set mOuiVendor=%%i&set mOuiAlt=%%j&set mNewRanMac=!mOuiAlt!%mNic%&goto :exitRanOuiLoop
 	)
 )
 
 if OSver LSS 6.0 (
-	if exist "%chmacdir%Data\OUI_NT5.txt" (
-		@for /f "delims== tokens=1,2 usebackq%mRandomSkipNum%" %%i in ("%chmacdir%Data\OUI_NT5.txt") do set mOuiVendor=%%i&set mOuiAlt=%%j&set mNewRanMac=!mOuiAlt!%mNic%&goto :exitRanOuiLoop
+	if exist "!ChMacDir!Data\OUI_NT5.txt" (
+		@for /f "delims== tokens=1,2 usebackq%mRandomSkipNum%" %%i in ("!ChMacDir!Data\OUI_NT5.txt") do set mOuiVendor=%%i&set mOuiAlt=%%j&set mNewRanMac=!mOuiAlt!%mNic%&goto :exitRanOuiLoop
 	)
 )
 
@@ -941,7 +941,7 @@ goto :EOF
 echo.
 echo                               [ ChMac %ChMacVersion% ]
 echo.
-echo             https://wandersick.blogspot.com ^| wandersick@gmail.com
+echo             https://tech.wandersick.com ^| wandersick@gmail.com
 echo.
 if defined mShortHelp goto :helpSkip1
 echo     [ What? ]
