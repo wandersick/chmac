@@ -163,7 +163,7 @@ attrib -h "%windir%\system32" | find /i "system32" >nul 2>&1
 if %errorlevel% EQU 0 (
 	if "%UACenabled%" EQU "1" (
 		REM only when UAC is enabled can this script be elevated. Otherwise, non-stop prompting will occur.
-		cscript //NoLogo ".\Data\_elevate.vbs" "%CD%\" "%CD%\chmac.bat" >nul 2>&1
+		cscript //NoLogo "%chmacdir%Data\_elevate.vbs" "%chmacdir%" "%chmacdir%\chmac.bat" >nul 2>&1
 		goto :EOF
 	) else (
 		echo.
