@@ -2,8 +2,8 @@
 
 :: Script: ChMac
 :: Filename: chmac.bat
-:: Version: 1.3
-:: Last Modified: 14/06/2020
+:: Version: 2.0
+:: Last Modified: 17/06/2020
 :: Creation Date: 24/01/2010
 :: Author: wandersick 
 :: Email: wandersick@gmail.com
@@ -40,7 +40,7 @@ if defined debug2 echo on&set debug=1&echo :: Debugging mode 2 is ON.
 :: set error code to 0
 set mErrCode=0
 set mAutoChangeInterval=None
-set ChMacVersion=v1.3
+set ChMacVersion=v2.0
 
 :: if elevated itself
 :: if /i "%1" EQU "/2ndtime" set secondRun=1

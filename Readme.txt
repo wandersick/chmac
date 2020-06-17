@@ -1,7 +1,7 @@
 
-                             [ ChMac v1.3 ]
+                             [ ChMac v2.0 ]
 
-          https://wandersick.blogspot.com | wandersick@gmail.com
+          https://tech.wandersick.com | wandersick@gmail.com
 
      [ What? ]
 
@@ -40,6 +40,10 @@
   #  Restore original MAC address
 
   #  Error checking + rich return codes for scripting or other possibilities
+
+  #  While portable by default, it can be installed (using setup.exe) to
+     enable the 'ChMac' command anywhere for ease of use, by adding to Run
+     prompt and PATH environmental variable (feature available since v2.0)
 
   #  Free and open-source software written in Windows Batch language
 
@@ -143,5 +147,5 @@
      [ Donation ]
 
      If ChMac or my other utilities help you, consider buying a cup of coffee
-     at https://tinyurl.com/buy-coffee which would be appreciated :)
+     at https://tinyurl.com/buy-coffee which would be much appreciated :)
      

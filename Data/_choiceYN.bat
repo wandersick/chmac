@@ -6,7 +6,7 @@
 :: Last Modified: 20/01/2010
 :: Author: wandersick 
 :: Email: wandersick@gmail.com
-:: Web: https://wandersick.blogspot.com
+:: Web: https://tech.wandersick.com
 :: Github Repo: https://github.com/wandersick/ws-choice
 :: Supported OS: Windows 2000 or later
 
@@ -29,7 +29,7 @@ if "%~1"=="/?" (goto help) else if /i "%~1"=="" (goto help) else (goto _choiceYn
 :help
 
 echo.
-echo :: _choiceYN.bat by wandersick - https://wandersick.blogspot.com
+echo :: _choiceYN.bat by wandersick - https://tech.wandersick.com
 echo.
 echo  [Usage]
 echo.
