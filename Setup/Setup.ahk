@@ -224,17 +224,31 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 	; For removing 'ChMac' from environmental variable including a semicolon
 	if setupAllUsers
 	{
-		targetDirToRemove=;%targetDir%\wandersick\ChMac\
+		targetDirToRemove1=;%targetDir%\wandersick\ChMac\
+		targetDirToRemove2=;%targetDir%\wandersick\ChMac
+		; In case this is at the top of the PATH list
+		targetDirToRemove3=%targetDir%\wandersick\ChMac\;
+		targetDirToRemove4=%targetDir%\wandersick\ChMac;
 		EnvGet, envVarPath, Path
-		envVarPathNew := StrReplace(envVarPath, targetDirToRemove)
+		envVarPathNewTemp1 := StrReplace(envVarPath, targetDirToRemove1)
+		envVarPathNewTemp2 := StrReplace(envVarPathNewTemp1, targetDirToRemove2)
+		envVarPathNewTemp3 := StrReplace(envVarPathNewTemp2, targetDirToRemove3)
+		envVarPathNew := StrReplace(envVarPathNewTemp3, targetDirToRemove4)
 		RegWrite, REG_SZ, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path, %envVarPathNew%
 		Sleep, 1000
 		; Broadcast WM_SETTINGCHANGE message for the updated PATH to take effect
 		EnvUpdate
 	} else {
-		targetDirToRemove=;%targetDir%\wandersick\ChMac\
+		targetDirToRemove1=;%targetDir%\wandersick\ChMac\
+		targetDirToRemove2=;%targetDir%\wandersick\ChMac
+		; In case this is at the top of the PATH list
+		targetDirToRemove3=%targetDir%\wandersick\ChMac\;
+		targetDirToRemove4=%targetDir%\wandersick\ChMac;
 		EnvGet, envVarPath, Path
-		envVarPathNew := StrReplace(envVarPath, targetDirToRemove)
+		envVarPathNewTemp1 := StrReplace(envVarPath, targetDirToRemove1)
+		envVarPathNewTemp2 := StrReplace(envVarPathNewTemp1, targetDirToRemove2)
+		envVarPathNewTemp3 := StrReplace(envVarPathNewTemp2, targetDirToRemove3)
+		envVarPathNew := StrReplace(envVarPathNewTemp3, targetDirToRemove4)
 		RegWrite, REG_SZ, HKEY_CURRENT_USER\Environment, Path, %envVarPathNew%
 		Sleep, 1000
 		; Broadcast WM_SETTINGCHANGE message for the updated PATH to take effect
