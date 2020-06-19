@@ -94,14 +94,16 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 	; For setting system-wide PATH environmental variable so that 'ChMac' can be run in Command Prompt or PowerShell
 	if setupAllUsers
 	{
-		EnvGet, envVarPath, Path
+		; EnvGet, envVarPath, Path
+		RegRead, envVarPath, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path
 		envVarPathNew = %envVarPath%;%targetDir%\wandersick\ChMac\
 		RegWrite, REG_SZ, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path, %envVarPathNew%
 		Sleep, 1000
 		; Broadcast WM_SETTINGCHANGE message for the updated PATH to take effect
 		EnvUpdate
 	} else {
-		EnvGet, envVarPath, Path
+		; EnvGet, envVarPath, Path
+		RegRead, envVarPath, HKEY_CURRENT_USER\Environment, Path
 		envVarPathNew = %envVarPath%;%targetDir%\wandersick\ChMac\
 		RegWrite, REG_SZ, HKEY_CURRENT_USER\Environment, Path, %envVarPathNew%
 		Sleep, 1000
@@ -229,7 +231,8 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 		; In case this is at the top of the PATH list
 		targetDirToRemove3=%targetDir%\wandersick\ChMac\;
 		targetDirToRemove4=%targetDir%\wandersick\ChMac;
-		EnvGet, envVarPath, Path
+		; EnvGet, envVarPath, Path
+		RegRead, envVarPath, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path
 		envVarPathNewTemp1 := StrReplace(envVarPath, targetDirToRemove1)
 		envVarPathNewTemp2 := StrReplace(envVarPathNewTemp1, targetDirToRemove2)
 		envVarPathNewTemp3 := StrReplace(envVarPathNewTemp2, targetDirToRemove3)
@@ -244,7 +247,8 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 		; In case this is at the top of the PATH list
 		targetDirToRemove3=%targetDir%\wandersick\ChMac\;
 		targetDirToRemove4=%targetDir%\wandersick\ChMac;
-		EnvGet, envVarPath, Path
+		; EnvGet, envVarPath, Path
+		RegRead, envVarPath, HKEY_CURRENT_USER\Environment, Path
 		envVarPathNewTemp1 := StrReplace(envVarPath, targetDirToRemove1)
 		envVarPathNewTemp2 := StrReplace(envVarPathNewTemp1, targetDirToRemove2)
 		envVarPathNewTemp3 := StrReplace(envVarPathNewTemp2, targetDirToRemove3)
