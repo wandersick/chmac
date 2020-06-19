@@ -291,7 +291,7 @@ if "%~1" NEQ "" (
 )
 
 REM in command-line mode title is not shown
-if not defined mCmd title ChMac by wandersick %ChMacVersion% - Download DevCon.exe
+if not defined mCmd title ChMac by wandersick.com %ChMacVersion% - Download DevCon.exe
 
 if not defined noDevcon goto :MainMenu
 if exist "!ChMacDir!Data\skipInit" goto :MainMenu
@@ -390,7 +390,7 @@ if defined mCmd (set mOperationTypeMsg=Command-line) else (set mTitleConsoleMsg=
 :: menu not implemented
 
 :ChMac
-title ChMac by wandersick %ChMacVersion% %mTitleConsoleMsg%
+title ChMac by wandersick.com %ChMacVersion% %mTitleConsoleMsg%
 :: less is displayed in command-line mode than in interactive
 if not defined mCmd (
 	cls
@@ -819,7 +819,7 @@ if /i "%mAutoChangeInterval%" NEQ "None" (
 :: extra msg for virtual adapter
 if defined mIsVirtualAdapter (set mIsVirtualAdapterMsg=Unsupported virtual adapter.) else (set mIsVirtualAdapterMsg=Try another OUI or restart the adapter.)
 
-title ChMac by wandersick %ChMacVersion%
+title ChMac by wandersick.com %ChMacVersion%
 if "%mSuccessOrFailure%" EQU "Failure" (
 	echo :: Error: MAC change failed. %mIsVirtualAdapterMsg%
 	echo.

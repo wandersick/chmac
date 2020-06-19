@@ -22,6 +22,7 @@ For a quick start, refer to [Examples](#Examples) section; for screenshots, refe
 - Error checking and rich return codes for scripting and other possibilities
 - Free and open-source software written in Windows batch language
 - Supports Windows 2000/XP/Vista/7/8/8.1/10 and Server 2000/2003/2008/2012/2016/2019
+- Portable by default. Optional installer enables `chmac` command globally (in Command Prompt and Run prompt)
 - Easy-to-use interactive console as well as accepting command-line parameters
   - Just follow instructions on screen for using the interactive console. For command-line mode, see the following
 
@@ -91,6 +92,7 @@ Simply run `chmac.bat` and follow on-screen instructions.
 ```
 ChMac                      :: Main directory
 │   chmac.bat              :: Main script
+|   Setup.exe              :: Optional installer enabling chmac command globally (in Command Prompt and Run prompt)
 │   Readme.txt             :: Documentation
 │
 └───Data
@@ -303,7 +305,7 @@ Return code: 7
 
 | Ver | Date | Changes |
 | --- | --- | --- |
-| 2.0 | 20200617 | - Add setup.exe for an installation option alongside existing portable mode, adding to Run prompt and PATH environmental variable to enable the 'ChMac' command anywhere for ease of use<br>- Fix (remove) EnableLUA debug message that is displayed during UAC elevation<br>- Wrap exclamation marks around ChMacDir variable to handle parentheses<br>- Fix a bug where ChMac (Command Prompt) does not totally exit at the end<br>- Improve UAC elevation mechanism so that it supports Run prompt |
+| 2.0 | 20200619 | - Add setup.exe for an installation option alongside existing portable mode, adding to Run prompt and PATH environmental variable to enable the 'ChMac' command anywhere for ease of use<br>- Fix (remove) EnableLUA debug message that is displayed during UAC elevation<br>- Wrap exclamation marks around ChMacDir variable to handle parentheses<br>- Fix a bug where ChMac (Command Prompt) does not totally exit at the end<br>- Improve UAC elevation mechanism so that it supports Run prompt |
 | 1.3 | 20200614 | - Elevate as administrator as needed when User Account Control (UAC) is enabled in the system |
 | 1.2 | 20190629 | - Improve compatibility on Windows 10 by changing binaries of GNU Linux utilities<br>- Handle cases when the system PATH variable contains parenthesis  |
 | 1.1 | 20120916 | Interim release |

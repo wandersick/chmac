@@ -1,5 +1,4 @@
-' Subscript of Cmd Dict by wanderSick
-' See main script -- fy.cmd -- for more details.
+' Subscript of ChMac by wandersick.com
 
 ' Used to run desired programs as administrator (for Vista or later with UAC)
 ' Based on http://www.winhelponline.com/articles/185/1/VBScripts-and-UAC-elevation.html

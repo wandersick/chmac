@@ -147,5 +147,5 @@
      [ Donation ]
 
      If ChMac or my other utilities help you, consider buying a cup of coffee
-     at https://tinyurl.com/buy-coffee which would be much appreciated :)
+     at https://tech.wandersick.com/p/donate.html which is much appreciated :)
      
