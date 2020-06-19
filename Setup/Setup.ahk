@@ -1,4 +1,4 @@
-; (c) Copyright 2010-2020 ChMac installer by wandersick | https://tech.wandersick.com
+; (c) Copyright 2010-2020 ChMac installer by wandersick (originally AeroZoom installer) | https://tech.wandersick.com
 
 ; Return Codes:
 ;
@@ -116,14 +116,14 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 		; Create shortcut to Start Menu (All Users)
 		If setupAllUsers
 		{
-			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_ProgramsCommon%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security, or to work around usage limit of public Wi-Fi hotspots, either automatically or manually,,
-			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_DesktopCommon%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security, or to work around usage limit of public Wi-Fi hotspots, either automatically or manually,,
+			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_ProgramsCommon%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security`, or to work around usage limit of public Wi-Fi hotspots`, either automatically or manually,%targetDir%\wandersick\ChMac\Data\chmac-icon.ico,
+			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_DesktopCommon%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security`, or to work around usage limit of public Wi-Fi hotspots`, either automatically or manually,%targetDir%\wandersick\ChMac\Data\chmac-icon.ico,
 		}
 		; Create shortcut to Start Menu (Current User)
 		Else
 		{
-			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_Programs%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security, or to work around usage limit of public Wi-Fi hotspots, either automatically or manually,,
-			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_Desktop%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security, or to work around usage limit of public Wi-Fi hotspots, either automatically or manually,,
+			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_Programs%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security`, or to work around usage limit of public Wi-Fi hotspots`, either automatically or manually,%targetDir%\wandersick\ChMac\Data\chmac-icon.ico,
+			FileCreateShortcut, %targetDir%\wandersick\ChMac\ChMac.bat, %A_Desktop%\ChMac.lnk, %targetDir%\wandersick\ChMac\,, ChMac`, Windows batch CLI utility to change or randomize network adapter MAC address for security`, or to work around usage limit of public Wi-Fi hotspots`, either automatically or manually,%targetDir%\wandersick\ChMac\Data\chmac-icon.ico,
 		}
 	}
 	; if a shortcut is in startup, re-create it to ensure its not linked to the portable version's path
@@ -142,7 +142,7 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 	}
 
 	; Write uninstallation entries to registry 
-	; Icon from Crystal Clear icon set (konsole-2.ico) by artist Everaldo Coelho licensed under GNU LGPL
+	; Icon from Crystal Clear icon set (network-wired.ico) by artist Everaldo Coelho licensed under GNU LGPL
 	RegWrite, REG_SZ, HKEY_CURRENT_USER, %regKey%, DisplayIcon, %targetDir%\wandersick\ChMac\Data\chmac-icon.ico,0
 	RegWrite, REG_SZ, HKEY_CURRENT_USER, %regKey%, DisplayName, ChMac %verAZ%
 	RegWrite, REG_SZ, HKEY_CURRENT_USER, %regKey%, InstallDate, %A_YYYY%%A_MM%%A_DD%
