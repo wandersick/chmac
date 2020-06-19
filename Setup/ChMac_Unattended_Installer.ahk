@@ -13,4 +13,4 @@ RunWait, %A_ScriptDir%\ChMac\Setup.exe /programfiles /unattendaz=1
 ; Clean up temporary files used during setup shortly after setup finishes installation
 Sleep, 100
 FileDelete, %A_ScriptDir%\ChMac_7-Zip_SFX.exe
-FileDelete, %A_ScriptDir%\*ChMac*.*
+FileRemoveDir, %A_ScriptDir%\ChMac, 1
