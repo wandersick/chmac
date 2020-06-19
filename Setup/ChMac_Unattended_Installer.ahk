@@ -9,3 +9,8 @@ RunWait, %A_ScriptDir%\ChMac_7-Zip_SFX.exe -o"%A_ScriptDir%" -y
 ; For ChMac, this command will install ChMac to All Users (/programfiles) and silently (/unattendedaz=1)
 ; as well as uninstalling in case an ChMac copy is found in the target location (built into the logic of Setup.exe of ChMac)
 RunWait, %A_ScriptDir%\ChMac\Setup.exe /programfiles /unattendaz=1
+
+; Clean up temporary files used during setup shortly after setup finishes installation
+Sleep, 100
+FileDelete, %A_ScriptDir%\ChMac_7-Zip_SFX.exe
+FileDelete, %A_ScriptDir%\*ChMac*.*
