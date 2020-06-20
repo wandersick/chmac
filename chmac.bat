@@ -858,7 +858,7 @@ if defined noDevcon (
 set mRerun=1
 goto :ChMac
 :end
-endlocal&exit %mErrCode%
+endlocal&exit /b %mErrCode%
 
 :error
 echo.

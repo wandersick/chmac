@@ -10,6 +10,7 @@ Set objShell = CreateObject("Shell.Application")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 strWorkDir = WScript.Arguments(0)
 strFile = WScript.Arguments(1)
+strParam = WScript.Arguments(2)
 strArg = "/c start " & chr(34) & chr(34) & " /d " & chr(34) & strWorkDir & chr(34) & " " & chr(34) & strFile & chr(34)
 'Debug line
 'Msgbox strWorkDir & strFile & vbcrlf & strArg
