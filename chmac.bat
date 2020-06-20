@@ -161,11 +161,15 @@ if "%errorlevel%"=="9009" set noAttrib=1
 if defined noAttrib goto :skipAdminCheck
 attrib -h "%windir%\system32" | find /i "system32" >nul 2>&1
 if %errorlevel% EQU 0 (
-	if "%UACenabled%" EQU "1" (
+	REM only when no parameter is specified should the script be elevated, as any supplied parameters cannot be carried across
+	if /i "%~1"=="" (
 		REM only when UAC is enabled can this script be elevated. Otherwise, non-stop prompting will occur.
-		cscript //NoLogo "!ChMacDir!Data\_elevate.vbs" "!ChMacDir!" "!ChMacDir!\chmac.bat" >nul 2>&1
-		goto :EOF
-	) else (
+		if "%UACenabled%" EQU "1" (
+			cscript //NoLogo "!ChMacDir!Data\_elevate.vbs" "!ChMacDir!" "!ChMacDir!\chmac.bat" >nul 2>&1
+			goto :EOF
+		)
+	) else if /i "%~1" NEQ "/l" (
+		REM /l does not require admin rights
 		echo.
 		echo ** WARNING: Script running without admin rights. Cannot continue.
 		echo.
