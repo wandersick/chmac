@@ -986,6 +986,10 @@ echo  #  Restore original MAC address
 echo.
 echo  #  Error checking + rich return codes for scripting or other possibilities
 echo.
+echo  #  While portable by default, it can be installed ^(using setup.exe^) to
+echo     enable the 'ChMac' command anywhere for ease of use, by adding to Run
+echo     prompt and PATH environmental variable ^(feature available since v2.0^)
+echo.
 echo  #  Free and open-source software written in Windows Batch language
 echo.
 echo  #  Supports Windows 2000/XP/Vista/7/8/8.1/10 and Server 2000-2019
@@ -1093,7 +1097,7 @@ echo.
 echo     [ Buy a Coffee ]
 echo.
 echo     If ChMac or my other utilities help you, consider buying a cup of coffee at 
-echo     https://tinyurl.com/buy-coffee which would be appreciated :^)
+echo     https://tech.wandersick.com/p/donate.html which is much appreciated :^)
 set mHelp=
 goto :end
 
