@@ -2,8 +2,8 @@
 
 :: Script: ChMac
 :: Filename: chmac.bat
-:: Version: 2.0
-:: Last Modified: 17/06/2020
+:: Version: 2.0 (2.0.0.3)
+:: Last Modified: 21/06/2020
 :: Creation Date: 24/01/2010
 :: Author: wandersick 
 :: Email: wandersick@gmail.com
@@ -169,9 +169,9 @@ if %errorlevel% EQU 0 (
 			goto :EOF
 		)
 	) else if /i "%~1" NEQ "/l" (
-		REM /l does not require admin rights
+		REM /l, /? and /help do not require admin rights, while the rest do
 		echo.
-		echo ** WARNING: Script running without admin rights. Cannot continue.
+		echo ** ChMac requires admin rights for certain features. Please run as admin.
 		echo.
 		pause
 		goto :EOF
