@@ -328,7 +328,7 @@ if %cmReminderChoice% EQU 2 (
 	echo.
 	echo :: A web page will be opened in 5 seconds. Please wait.
 	echo.
-	echo    After the download, store devcon.exe in "ChMac\Data\3rdparty"
+	echo    After download, put devcon.exe in "!ChMacDir!Data\3rdparty"
 	echo.
 	echo :: Press any key here after the above has been performed.
 	"!ChMacDir!Data\3rdparty\sleep.exe" 5
