@@ -280,7 +280,7 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 		Msgbox, 262144, ChMac, Successfully uninstalled`n`nSetup will now delete itself in 3 seconds,3
 	}
 	; Remove directory content including Setup.exe that is currently running after 3 seconds using ping in a minimized Command Prompt
-	Run, cmd /c start /min ping 127.0.0.1 -n 3 >nul & rd /s /q "%targetDir%\wandersick"
+	Run, cmd /c start /min ping 127.0.0.1 -n 3 >nul & rd /s /q "%targetDir%\wandersick\ChMac"
 }
 
 ExitApp, 0

@@ -2,8 +2,8 @@
 
 :: Script: ChMac
 :: Filename: chmac.bat
-:: Version: 2.0 (2.0.0.3)
-:: Last Modified: 21/06/2020
+:: Version: 2.0 (2.0.0.5)
+:: Last Modified: 23/06/2020
 :: Creation Date: 24/01/2010
 :: Author: wandersick 
 :: Email: wandersick@gmail.com
@@ -295,7 +295,7 @@ if "%~1" NEQ "" (
 )
 
 REM in command-line mode title is not shown
-if not defined mCmd title ChMac by wandersick.com %ChMacVersion% - Download DevCon.exe
+if not defined mCmd title ChMac by wandersick %ChMacVersion% - Download DevCon.exe
 
 if not defined noDevcon goto :MainMenu
 if exist "!ChMacDir!Data\skipInit" goto :MainMenu
@@ -394,7 +394,7 @@ if defined mCmd (set mOperationTypeMsg=Command-line) else (set mTitleConsoleMsg=
 :: menu not implemented
 
 :ChMac
-title ChMac by wandersick.com %ChMacVersion% %mTitleConsoleMsg%
+title ChMac by wandersick %ChMacVersion% %mTitleConsoleMsg%
 :: less is displayed in command-line mode than in interactive
 if not defined mCmd (
 	cls
@@ -496,7 +496,7 @@ if %mErrorLevel% EQU %mNumPlusTwo% (
   echo.
   echo    Thanks for using ChMac :^)
 	echo.
-	echo    Support by buying coffee at about.me/wandersick
+	echo    Support by buying coffee at tech.wandersick.com
   echo.
   sleep 2s >nul 2>&1
   cls
@@ -823,7 +823,7 @@ if /i "%mAutoChangeInterval%" NEQ "None" (
 :: extra msg for virtual adapter
 if defined mIsVirtualAdapter (set mIsVirtualAdapterMsg=Unsupported virtual adapter.) else (set mIsVirtualAdapterMsg=Try another OUI or restart the adapter.)
 
-title ChMac by wandersick.com %ChMacVersion%
+title ChMac by wandersick %ChMacVersion%
 if "%mSuccessOrFailure%" EQU "Failure" (
 	echo :: Error: MAC change failed. %mIsVirtualAdapterMsg%
 	echo.
