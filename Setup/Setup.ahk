@@ -97,7 +97,7 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 		; EnvGet, envVarPath, Path
 		RegRead, envVarPath, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path
 		envVarPathNew = %envVarPath%;%targetDir%\wandersick\ChMac\
-		RegWrite, REG_SZ, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path, %envVarPathNew%
+		RegWrite, REG_EXPAND_SZ, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path, %envVarPathNew%
 		Sleep, 1000
 		; Broadcast WM_SETTINGCHANGE message for the updated PATH to take effect
 		EnvUpdate
@@ -237,7 +237,7 @@ IfNotExist, %targetDir%\wandersick\ChMac\ChMac.bat
 		envVarPathNewTemp2 := StrReplace(envVarPathNewTemp1, targetDirToRemove2)
 		envVarPathNewTemp3 := StrReplace(envVarPathNewTemp2, targetDirToRemove3)
 		envVarPathNew := StrReplace(envVarPathNewTemp3, targetDirToRemove4)
-		RegWrite, REG_SZ, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path, %envVarPathNew%
+		RegWrite, REG_EXPAND_SZ, HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment, Path, %envVarPathNew%
 		Sleep, 1000
 		; Broadcast WM_SETTINGCHANGE message for the updated PATH to take effect
 		EnvUpdate
