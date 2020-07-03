@@ -59,7 +59,7 @@ When no parameter is specified, interactive mode is entered on launch.
 
 ## MAC Address Format
   
-The mac address format can be any of the following:
+The MAC address format can be any of the following:
 
 ```
 AB-CD-EF-12-34-56
