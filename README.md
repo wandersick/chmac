@@ -301,6 +301,12 @@ Return code: 7
 1. Some virtual adapters may be unsupported
 2. Randomization logic randomizes numbers (0-9) instead of hexadecimal (0-9, A-F)
 
+## Word of Mouth
+
+Below is one of the kind comments left by ChMac users. (Thanks!)
+
+- "[Will keep this one handy!](https://twitter.com/NassimSpace/status/1184248919649411073)"
+
 ## Release History
 
 | Ver | Date | Changes |
