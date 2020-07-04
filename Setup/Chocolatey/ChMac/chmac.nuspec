@@ -47,79 +47,33 @@ This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Refe
     <docsUrl>https://github.com/wandersick/chmac</docsUrl>
     <mailingListUrl>https://feedburner.google.com/fb/a/mailverify?uri=wandersick</mailingListUrl>
     <bugTrackerUrl>https://github.com/wandersick/chmac/issues</bugTrackerUrl>
-    <tags>ChMac Utility Network Security Wi-Fi MAC Address Networking Windows Batch Scipt Command CLI</tags>
-    <summary>A quick Windows batch CLI tool to change or randomize network adapter MAC address for security, or to work around usage limit of public Wi-Fi hotspots, either auto or manually. The command, chmac, changes MAC address in an easy-to-use interactive console alongside CLI parameters</summary>
-    <description>## ChMac - Windows Command to Change MAC Addresses of Network Adapters (chmac.bat)
+    <tags>ChMac Utility Network Security Wi-Fi MAC Address Networking Windows Batch Script Command CLI</tags>
+    <summary>Windows command to change or randomize MAC addresses of network adapters</summary>
+    <description>Named after getmac and chmod, `chmac` is a command-line-interface (CLI) tool for Windows that changes or randomizes MAC addresses of specified network adapters, e.g. for a client device to reuse public Wi-Fi hotspot that has exceeded usage limit for the day (e.g. hotels, restaurants), or to enhance security.
 
-Named after getmac and chmod, `chmac` is a command-line-interface (CLI) tool for Windows that changes or randomizes MAC addresses of specified network adapters, e.g. for a client device to reuse public Wi-Fi hotspot that has exceeded usage limit for the day (e.g. hotels, restaurants), or to enhance security.
-
-An easy-to-use interactive console is available, alongside command-line parameters, e.g. for scheduling jobs with Task Scheduler. ChMac also has built-in support for recurrence.
+An easy-to-use interactive console is available, alongside command-line parameters.
 
 ## List of Features
 
-- Change MAC addresses on Windows automatically or manually
-  - Automatically change MAC addresses on set intervals
-    - Useful to reconnect to free public Wi-Fi hotspots that impose a time limit by recognizing MAC addresses to prevent the same device from reconnecting
+- Change MAC addresses on Windows manually or automatically on set intervals
 - Randomize MAC addresses for better security using public Wi-Fi
   - Generate new MAC addresses randomly based on a customizable list of organizationally unique identifiers (OUI)
 - Optionally leverage DevCon.exe to simply the process by automatically disabling and re-enabling network interface card (NIC)
   - ChMac also works without DevCon by showing the Network Connections folder when finished, so that users can manually disable and re-enable NIC for new settings to take effect
   - On first launch, users are guided to download DevCon with convenient automatic and manual options
 - Restore original MAC address
-- Error checking and rich return codes for scripting and other possibilities
+- Rich return codes for scripting and other possibilities
 - Free and open-source software written in Windows batch language
 - Supports Windows 2000/XP/Vista/7/8/8.1/10 and Server 2000/2003/2008/2012/2016/2019
-- Portable by default. Optional installer enables `chmac` command globally (in Command Prompt and Run prompt. For PowerShell prompt, the command would be `chmac.bat`)
-- Easy-to-use interactive console as well as accepting command-line parameters
-  - Just follow instructions on screen for using the interactive console. For command-line mode, see the following
+- Portable by default. Optional installer enables `chmac` command globally
 
-## How It Works
+## Getting Started
 
-ChMac works by querying a list of network adapters from Windows registry under `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}`.
+For interactive mode, simply run `chmac.bat` and follow on-screen instructions.
 
-Based on user selection, ChMac updates the registry key responsible for the MAC address, `NetworkAddress`, of the corresponding adapter with an inputted or randomized MAC address from customizable OUI lists, either ad-hoc or automatically with Task Scheduler or its built-in auto-changing mechanism.
-
-After MAC address is updated, the network adapter will be automatically disabled and re-enabled if an OS-specific DevCon.exe (a separate download from Microsoft) is available in the OS (the environmental variable, `PATH`) or under ChMac dependency directory, `ChMac\Data\3rdparty`.
-
-If DevCon is unavailable, the Network Connections window will be presented to user where network adapter can be disabled and re-enabled manually.
-
-## Syntax
+For command-line mode, refer to the below examples.
 
 chmac.bat `[/d dir][/l][/m address][/n id][/r][/help][/?]`
-
-## Parameters
-
-```
-/d dir        :: working directory - maybe required
-                 (MUST be specified before other parameters)
-/l            :: list network adapters and their IDs
-/m            :: new mac address to be applied.
-/n            :: adapter to be applied new mac address if /m is unspecified
-                 new mac address will be randomized (OUI kept) and automatically filled in
-/r            :: restore to original MAC address
-/a            :: auto-change interval
-                 suffix may be s for seconds, m for minutes, h for hours or d for days
-                 e.g. enter '20m' to recur every 20 mins. [X] to reset or exit
-```
-
-When no parameter is specified, interactive mode is entered on launch.
-
-## MAC Address Format
-  
-The MAC address format can be any of the following:
-
-```
-AB-CD-EF-12-34-56
-AB:CD:EF:12:34:56
-AB.CD.EF.12.34.56
-AB CD EF 12 34 56            :: without any separation in between at all
-```
-
-**Note**: To increase success rate of changing MAC addresses in Windows Vista and later OS, the OUI lists included in ChMac contains MAC addresses which starts with `02` only
-
-## Examples
-
-### Command-Line Mode
 
 ```
 chmac /l                     :: list available adapter IDs
@@ -129,10 +83,6 @@ chmac /n 3 /r                :: restore adapter 3 to its original MAC
 chmac /n 4 /a 20m            :: auto-change MAC per 20 minute
 chmac /?                     :: shows short help. [/help] for long
 ```
-
-### Interactive Mode
-
-Simply run `chmac.bat` and follow on-screen instructions.
  </description>
     <releaseNotes>https://tech.wandersick.com/2019/06/chmac-windows-command-to-change-mac.html#releasenotes</releaseNotes>
     <!-- =============================== -->      
