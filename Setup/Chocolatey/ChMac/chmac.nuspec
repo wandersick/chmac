@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Read this before creating packages: https://chocolatey.org/docs/create-packages -->
+<!-- It is especially important to read the above link to understand additional requirements when publishing packages to the community feed aka dot org (https://chocolatey.org/packages). -->
+
+<!-- Test your packages in a test environment: https://github.com/chocolatey/chocolatey-test-environment -->
+
+<!--
+This is a nuspec. It mostly adheres to https://docs.nuget.org/create/Nuspec-Reference. Chocolatey uses a special version of NuGet.Core that allows us to do more than was initially possible. As such there are certain things to be aware of:
+
+* the package xmlns schema url may cause issues with nuget.exe
+* Any of the following elements can ONLY be used by choco tools - projectSourceUrl, docsUrl, mailingListUrl, bugTrackerUrl, packageSourceUrl, provides, conflicts, replaces 
+* nuget.exe can still install packages with those elements but they are ignored. Any authoring tools or commands will error on those elements 
+-->
+
+<!-- You can embed software files directly into packages, as long as you are not bound by distribution rights. -->
+<!-- * If you are an organization making private packages, you probably have no issues here -->
+<!-- * If you are releasing to the community feed, you need to consider distribution rights. -->
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- == PACKAGE SPECIFIC SECTION == -->
+    <!-- This section is about this package, although id and version have ties back to the software -->
+    <!-- id is lowercase and if you want a good separator for words, use '-', not '.'. Dots are only acceptable as suffixes for certain types of packages, e.g. .install, .portable, .extension, .template -->
+    <!-- If the software is cross-platform, attempt to use the same id as the debian/rpm package(s) if possible. -->
+    <id>ChMac</id>
+    <!-- version should MATCH as closely as possible with the underlying software -->
+    <!-- Is the version a prerelease of a version? https://docs.nuget.org/create/versioning#creating-prerelease-packages -->
+    <!-- Note that unstable versions like 0.0.1 can be considered a released version, but it's possible that one can release a 0.0.1-beta before you release a 0.0.1 version. If the version number is final, that is considered a released version and not a prerelease. -->
+    <version>2.0.0.5</version>
+    <packageSourceUrl>https://github.com/wandersick/chmac/tree/master/Setup/Chocolatey/ChMac</packageSourceUrl>
+    <!-- owners is a poor name for maintainers of the package. It sticks around by this name for compatibility reasons. It basically means you. -->
+    <owners>wandersick</owners>
+    <!-- ============================== -->
+
+    <!-- == SOFTWARE SPECIFIC SECTION == -->
+    <!-- This section is about the software itself -->
+    <title>ChMac</title>
+    <authors>wandersick</authors>
+    <!-- projectUrl is required for the community feed -->
+    <projectUrl>https://tech.wandersick.com/2019/06/chmac-windows-command-to-change-mac.html</projectUrl>
+    <iconUrl>https://cdn.statically.io/gh/wandersick/chmac/master/Data/chmac-icon.png</iconUrl>
+    <!-- <copyright>Year Software Vendor</copyright> -->
+    <!-- If there is a license Url available, it is required for the community feed -->
+    <licenseUrl>https://raw.github.com/wandersick/chmac/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/wandersick/chmac</projectSourceUrl>
+    <docsUrl>https://github.com/wandersick/chmac</docsUrl>
+    <mailingListUrl>https://feedburner.google.com/fb/a/mailverify?uri=wandersick</mailingListUrl>
+    <bugTrackerUrl>https://github.com/wandersick/chmac/issues</bugTrackerUrl>
+    <tags>ChMac Utility Network Security Wi-Fi MAC Address Networking Windows Batch Scipt Command CLI</tags>
+    <summary>A quick Windows batch CLI tool to change or randomize network adapter MAC address for security, or to work around usage limit of public Wi-Fi hotspots, either auto or manually. The command, chmac, changes MAC address in an easy-to-use interactive console alongside CLI parameters</summary>
+    <description>## ChMac - Windows Command to Change MAC Addresses of Network Adapters (chmac.bat)
+
+Named after getmac and chmod, `chmac` is a command-line-interface (CLI) tool for Windows that changes or randomizes MAC addresses of specified network adapters, e.g. for a client device to reuse public Wi-Fi hotspot that has exceeded usage limit for the day (e.g. hotels, restaurants), or to enhance security.
+
+An easy-to-use interactive console is available, alongside command-line parameters, e.g. for scheduling jobs with Task Scheduler. ChMac also has built-in support for recurrence.
+
+## List of Features
+
+- Change MAC addresses on Windows automatically or manually
+  - Automatically change MAC addresses on set intervals
+    - Useful to reconnect to free public Wi-Fi hotspots that impose a time limit by recognizing MAC addresses to prevent the same device from reconnecting
+- Randomize MAC addresses for better security using public Wi-Fi
+  - Generate new MAC addresses randomly based on a customizable list of organizationally unique identifiers (OUI)
+- Optionally leverage DevCon.exe to simply the process by automatically disabling and re-enabling network interface card (NIC)
+  - ChMac also works without DevCon by showing the Network Connections folder when finished, so that users can manually disable and re-enable NIC for new settings to take effect
+  - On first launch, users are guided to download DevCon with convenient automatic and manual options
+- Restore original MAC address
+- Error checking and rich return codes for scripting and other possibilities
+- Free and open-source software written in Windows batch language
+- Supports Windows 2000/XP/Vista/7/8/8.1/10 and Server 2000/2003/2008/2012/2016/2019
+- Portable by default. Optional installer enables `chmac` command globally (in Command Prompt and Run prompt. For PowerShell prompt, the command would be `chmac.bat`)
+- Easy-to-use interactive console as well as accepting command-line parameters
+  - Just follow instructions on screen for using the interactive console. For command-line mode, see the following
+
+## How It Works
+
+ChMac works by querying a list of network adapters from Windows registry under `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}`.
+
+Based on user selection, ChMac updates the registry key responsible for the MAC address, `NetworkAddress`, of the corresponding adapter with an inputted or randomized MAC address from customizable OUI lists, either ad-hoc or automatically with Task Scheduler or its built-in auto-changing mechanism.
+
+After MAC address is updated, the network adapter will be automatically disabled and re-enabled if an OS-specific DevCon.exe (a separate download from Microsoft) is available in the OS (the environmental variable, `PATH`) or under ChMac dependency directory, `ChMac\Data\3rdparty`.
+
+If DevCon is unavailable, the Network Connections window will be presented to user where network adapter can be disabled and re-enabled manually.
+
+## Syntax
+
+chmac.bat `[/d dir][/l][/m address][/n id][/r][/help][/?]`
+
+## Parameters
+
+```
+/d dir        :: working directory - maybe required
+                 (MUST be specified before other parameters)
+/l            :: list network adapters and their IDs
+/m            :: new mac address to be applied.
+/n            :: adapter to be applied new mac address if /m is unspecified
+                 new mac address will be randomized (OUI kept) and automatically filled in
+/r            :: restore to original MAC address
+/a            :: auto-change interval
+                 suffix may be s for seconds, m for minutes, h for hours or d for days
+                 e.g. enter '20m' to recur every 20 mins. [X] to reset or exit
+```
+
+When no parameter is specified, interactive mode is entered on launch.
+
+## MAC Address Format
+  
+The MAC address format can be any of the following:
+
+```
+AB-CD-EF-12-34-56
+AB:CD:EF:12:34:56
+AB.CD.EF.12.34.56
+AB CD EF 12 34 56            :: without any separation in between at all
+```
+
+**Note**: To increase success rate of changing MAC addresses in Windows Vista and later OS, the OUI lists included in ChMac contains MAC addresses which starts with `02` only
+
+## Examples
+
+### Command-Line Mode
+
+```
+chmac /l                     :: list available adapter IDs
+chmac /n 1                   :: update network adapter #1 with randomized mac address numbers
+chmac /m 00301812AB01 /n 2   :: update network adapter #2 with the new mac address: 00-30-18-12-AB-01
+chmac /n 3 /r                :: restore adapter 3 to its original MAC
+chmac /n 4 /a 20m            :: auto-change MAC per 20 minute
+chmac /?                     :: shows short help. [/help] for long
+```
+
+### Interactive Mode
+
+Simply run `chmac.bat` and follow on-screen instructions.
+ </description>
+    <releaseNotes>https://tech.wandersick.com/2019/06/chmac-windows-command-to-change-mac.html#releasenotes</releaseNotes>
+    <!-- =============================== -->      
+
+    <!-- Specifying dependencies and version ranges? https://docs.nuget.org/create/versioning#specifying-version-ranges-in-.nuspec-files -->
+    <!--<dependencies>
+      <dependency id="" version="__MINIMUM_VERSION__" />
+      <dependency id="" version="[__EXACT_VERSION__]" />
+      <dependency id="" version="[_MIN_VERSION_INCLUSIVE, MAX_VERSION_INCLUSIVE]" />
+      <dependency id="" version="[_MIN_VERSION_INCLUSIVE, MAX_VERSION_EXCLUSIVE)" />
+      <dependency id="" />
+      <dependency id="chocolatey-core.extension" version="1.1.0" />
+    </dependencies>-->
+    <!-- chocolatey-core.extension - https://chocolatey.org/packages/chocolatey-core.extension
+         - You want to use Get-UninstallRegistryKey on less than 0.9.10 (in chocolateyUninstall.ps1)
+         - You want to use Get-PackageParameters and on less than 0.11.0
+         - You want to take advantage of other functions in the core community maintainer's team extension package
+    -->
+
+    <!--<provides>NOT YET IMPLEMENTED</provides>-->
+    <!--<conflicts>NOT YET IMPLEMENTED</conflicts>-->
+    <!--<replaces>NOT YET IMPLEMENTED</replaces>-->
+  </metadata>
+  <files>
+    <!-- this section controls what actually gets packaged into the Chocolatey package -->
+    <file src="tools\**" target="tools" />
+    <!--Building from Linux? You may need this instead: <file src="tools/**" target="tools" />-->
+  </files>
+</package>
