@@ -4,9 +4,22 @@ Named after getmac and chmod, `chmac` is a command-line-interface (CLI) tool for
 
 An easy-to-use interactive console is available, alongside command-line parameters, e.g. for scheduling jobs with Task Scheduler. ChMac also has built-in support for recurrence.
 
+For a quick start, refer to [Examples](#Examples) section. Scroll down for more screenshots.
+
 ![ChMac in Action](./Images/chmac-animated-demo.gif)
 
-For a quick start, refer to [Examples](#Examples) section; for screenshots, refer to [Screenshots](#Screenshots) section
+For download of the latest version (portable application & per-user/all-users installer), please visit GitHub Releases:
+
+- [Download ChMac](https://github.com/wandersick/chmac/releases)
+
+After downloading and extracting ChMac.zip, ChMac.bat portable application can be used immediately. Alternatively, Setup.exe (optional) provides installation into Current User or All Users location.
+
+For users of [Chocolatey](https://chocolatey.org/packages/chmac) and `winget` repositories who prefers unattended installation into All Users location:
+
+- `choco install chmac`
+- `winget install chmac`
+
+*Note for winget users: Please ignore the [warning from SmartScreen](https://live.staticflickr.com/65535/49987155847_d781799e16_o.gif), where you may safely click 'more info' to complete installation.
 
 ## List of Features
 
