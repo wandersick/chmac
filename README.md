@@ -19,7 +19,7 @@ For users of [Chocolatey](https://chocolatey.org/packages/chmac) and `winget` re
 - `choco install chmac`
 - `winget install chmac`
 
-*Note for winget users: Please ignore the [warning from SmartScreen](https://live.staticflickr.com/65535/49987155847_d781799e16_o.gif), where you may safely click 'more info' to complete installation.
+*Note for winget users: Please ignore the [warning from SmartScreen](https://live.staticflickr.com/65535/49987155847_468ed4ce08_o.gif), where you may safely click 'more info' to complete installation.
 
 ## List of Features
 
