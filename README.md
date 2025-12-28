@@ -318,7 +318,7 @@ Return code: 7
 
 Below is one of the kind comments left by ChMac users. (Thanks!)
 
-- "[Will keep this one handy!](https://twitter.com/NassimSpace/status/1184248919649411073)"
+- "[Will keep this one handy!](https://web.archive.org/web/20191015233441/https://twitter.com/NassimSpace/status/1184248919649411073)"
 
 ## Release History
 
